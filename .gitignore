@@ -1,0 +1,15 @@
+cache/
+*.mp4
+*.mkv
+*.mov
+*.wav
+*.vtt
+*.jpg
+*.png
+frames*/
+dataset/
+.venv/
+__pycache__/
+.env
+*.pyc
+tmp/
