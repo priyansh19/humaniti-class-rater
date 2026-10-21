@@ -1,0 +1,29 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>8x8 Class Quality Rater</title>
+<style>body{font-family:system-ui,sans-serif;max-width:860px;margin:2rem auto;padding:0 1rem;color:#222}
+textarea{width:100%;height:180px}input[type=url]{width:100%}button{padding:.6rem 1.4rem;font-size:1rem;margin-top:.6rem}
+.badge{font-size:1.8rem;font-weight:700}.Poor{color:#c0392b}.Average{color:#d68910}.Good{color:#2471a3}.Excellent{color:#1e8449}
+.bar{background:#eee;height:10px;border-radius:5px}.bar>div{background:#5b6ee1;height:10px;border-radius:5px}
+pre{white-space:pre-wrap;background:#f6f6f6;padding:.6rem;font-size:.85rem}.note{color:#666;font-size:.9rem}</style></head><body>
+<h1>8x8 Class Quality Rater</h1>
+<p class="note">Web version: rates a <b>class transcript</b> (Zoom VTT or "Speaker: text" TXT) as Poor / Average / Good / Excellent with evidence.
+Video analysis (Whisper ASR, camera/face/lighting frames) runs only in the local app. See the <a href="https://github.com/priyansh19/humaniti-class-rater">GitHub repo</a>.
+Transcripts are processed in memory and never stored.</p>
+<p><input type="file" id="file" accept=".vtt,.txt"></p>
+<p><input type="url" id="url" placeholder="...or a public link to a .vtt/.txt transcript"></p>
+<textarea id="txt" placeholder="...or paste the transcript here"></textarea>
+<button id="go">Assess</button>
+<div id="out"></div>
+<script>
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+document.getElementById('file').onchange=e=>{const f=e.target.files[0];if(f)f.text().then(t=>document.getElementById('txt').value=t)};
+document.getElementById('go').onclick=async()=>{const out=document.getElementById('out');out.innerHTML='Assessing…';
+ const body={transcript:document.getElementById('txt').value,url:document.getElementById('url').value};
+ try{const r=await fetch('/api/rate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();
+ if(!r.ok){out.innerHTML='<p style="color:#c0392b">'+esc(d.error)+'</p>';return}
+ let h=`<p class="badge ${d.label}">${d.label}</p><p class="note">Source: ${esc(d.source)} · local score ${d.local_score.toFixed(2)}</p>`;
+ if(d.llm){h+=`<p>${esc(d.llm.summary||'')}</p><h3>Strengths</h3><ul>${d.llm.strengths.map(s=>'<li>'+esc(s)+'</li>').join('')}</ul><h3>Improvements</h3><ul>${d.llm.improvements.map(s=>'<li>'+esc(s)+'</li>').join('')}</ul>`}
+ h+='<h3>Evidence</h3><ul>'+d.observations.map(o=>'<li>'+esc(o)+'</li>').join('')+'</ul><h3>Rubric themes</h3>';
+ for(const[k,v]of Object.entries(d.themes))h+=`<div>${esc(d.theme_labels[k])}: ${v.toFixed(2)}<div class="bar"><div style="width:${v*100}%"></div></div></div>`;
+ h+='<h3>Tagged lines (anonymised)</h3><pre>'+esc(d.evidence.join('\n'))+'</pre>';out.innerHTML=h}catch(e){out.innerHTML='Error: '+esc(e)}};
+</script></body></html>

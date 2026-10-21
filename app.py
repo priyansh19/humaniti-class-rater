@@ -2,12 +2,52 @@
 import json
 import os
 
+import tempfile
+
 import gradio as gr
+import requests
+
+from api.rate import fetch as fetch_text, _check_url
 
 from classq.pipeline import THEME_TEXT, assess, features_from
 
 
-def run(video, transcript, use_llm, whisper_model):
+def _download_video(url, max_bytes=1_500_000_000):
+    _check_url(url)
+    fd, path = tempfile.mkstemp(suffix=".mp4", dir=os.environ.get("TMPDIR"))
+    n = 0
+    with requests.get(url, stream=True, timeout=30, allow_redirects=False) as r, os.fdopen(fd, "wb") as out:
+        r.raise_for_status()
+        for c in r.iter_content(1 << 20):
+            n += len(c)
+            if n > max_bytes:
+                raise ValueError("Video too large")
+            out.write(c)
+    return path
+
+
+def run(video, transcript, use_llm, whisper_model, link=""):
+    tmp_video = None
+    if link and link.strip():
+        link = link.strip()
+        try:
+            if link.lower().split("?")[0].endswith((".mp4", ".mov", ".mkv", ".webm")):
+                video = tmp_video = _download_video(link)
+            else:
+                ttxt_link = fetch_text(link)
+                fd, transcript = tempfile.mkstemp(suffix=".txt")
+                with os.fdopen(fd, "w") as fh:
+                    fh.write(ttxt_link)
+        except Exception as e:
+            return f"Could not fetch link: {e}", "", "{}"
+    try:
+        return _run(video, transcript, use_llm, whisper_model)
+    finally:
+        if tmp_video and os.path.exists(tmp_video):
+            os.remove(tmp_video)
+
+
+def _run(video, transcript, use_llm, whisper_model):
     if not video and not transcript:
         return "Please upload a recording (MP4) and/or a transcript (VTT/TXT).", "", "{}"
     ttxt = open(transcript, encoding="utf-8", errors="ignore").read() if transcript else None
@@ -37,6 +77,7 @@ with gr.Blocks(title="8x8 Class Quality Assessor") as demo:
         t = gr.File(label="Transcript (VTT/TXT, optional; skips ASR)", file_types=[".vtt", ".txt"], type="filepath")
     with gr.Row():
         use_llm = gr.Checkbox(value=bool(os.environ.get("OPENROUTER_API_KEY")), label="Use LLM (OpenRouter) for the final judgement")
+        link = gr.Textbox(label="...or a public link to an MP4 or a VTT/TXT transcript")
         wm = gr.Dropdown(["tiny", "base", "small"], value="base", label="Whisper model (CPU)")
     btn = gr.Button("Assess", variant="primary")
     out = gr.Markdown()
@@ -44,7 +85,8 @@ with gr.Blocks(title="8x8 Class Quality Assessor") as demo:
         ev = gr.Textbox(lines=15)
     with gr.Accordion("Raw features", open=False):
         js = gr.Code(language="json")
-    btn.click(run, [v, t, use_llm, wm], [out, ev, js])
+    btn.click(run, [v, t, use_llm, wm, link], [out, ev, js])
 
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", 7860)))
+    demo.queue(max_size=8).launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", 7860)),
+                share=os.environ.get("GRADIO_SHARE") == "1", max_file_size="2gb")

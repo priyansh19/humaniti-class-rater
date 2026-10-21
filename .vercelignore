@@ -1,0 +1,13 @@
+cache
+tests
+scripts
+app.py
+requirements-full.txt
+packages.txt
+*.mp4
+*.vtt
+tmp
+__pycache__
+.env
+.env.local
+.vercel

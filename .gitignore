@@ -13,3 +13,7 @@ __pycache__/
 .env
 *.pyc
 tmp/
+.vercel
+.env*
+logs/
+share_url.txt

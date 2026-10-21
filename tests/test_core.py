@@ -105,3 +105,18 @@ def test_gitignore_protects_data():
     gi = open(os.path.join(os.path.dirname(__file__), "..", ".gitignore")).read()
     for pat in ["*.mp4", "*.vtt", "cache/", "*.jpg", ".env"]:
         assert pat in gi
+
+
+def test_web_endpoint_rate():
+    from api.rate import rate
+    r = rate({"transcript": VTT})
+    assert r["label"] in LABELS and r["observations"]
+    assert "Arun" not in json.dumps(r["evidence"])
+
+
+def test_web_endpoint_rejects_private_url():
+    from api.rate import fetch
+    with pytest.raises(ValueError):
+        fetch("http://127.0.0.1/x.vtt")
+    with pytest.raises(ValueError):
+        fetch("file:///etc/passwd")
