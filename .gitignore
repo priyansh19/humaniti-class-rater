@@ -17,3 +17,4 @@ tmp/
 .env*
 logs/
 share_url.txt
+.gradio/
