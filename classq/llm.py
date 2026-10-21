@@ -1,4 +1,4 @@
-"""OpenRouter scorer. Sends ONLY anonymised transcript text + numeric features. Never media."""
+"""Provider-pluggable LLM judge (Gemini / OpenAI / Anthropic). Sends ONLY anonymised transcript text + numeric features. Never media."""
 import json
 import os
 import re
@@ -7,8 +7,28 @@ import requests
 
 from .rubric import LABELS, RUBRIC
 
-URL = "https://openrouter.ai/api/v1/chat/completions"
-MODEL = os.environ.get("OPENROUTER_MODEL", "openai/gpt-4o-mini")
+# Approved providers only (client list): Gemini, OpenAI, Anthropic. Auto-detected from env keys.
+PROVIDERS = {
+    "gemini": (("GEMINI_API_KEY", "GOOGLE_API_KEY"), "gemini-2.5-flash"),
+    "openai": (("OPENAI_API_KEY",), "gpt-4o-mini"),
+    "anthropic": (("ANTHROPIC_API_KEY",), "claude-3-5-haiku-latest"),
+}
+
+
+def detect():
+    """Return (provider, key, model) or None. LLM_PROVIDER / LLM_MODEL env vars override."""
+    order = [os.environ["LLM_PROVIDER"]] if os.environ.get("LLM_PROVIDER") in PROVIDERS else list(PROVIDERS)
+    for p in order:
+        envs, model = PROVIDERS[p]
+        key = next((os.environ[e] for e in envs if os.environ.get(e)), None)
+        if key:
+            return p, key, os.environ.get("LLM_MODEL", model)
+    return None
+
+
+def enabled() -> bool:
+    return detect() is not None
+
 
 SYSTEM = ("You are an expert reviewer of 8x8's live online classes for children. Judge the class against the rubric. "
           "Use ONLY the evidence given. Every observation must cite a timestamp or a numeric feature. "
@@ -37,16 +57,45 @@ Return JSON: {{"label": one of {LABELS}, "confidence": 0-1,
  "summary": "2 sentences"}}"""
 
 
-def call(prompt: str, key: str | None = None, timeout=90) -> dict:
-    key = key or os.environ.get("OPENROUTER_API_KEY")
-    if not key:
-        raise RuntimeError("OPENROUTER_API_KEY not set")
-    r = requests.post(URL, timeout=timeout, headers={"Authorization": f"Bearer {key}"},
-                      json={"model": MODEL, "temperature": 0, "response_format": {"type": "json_object"},
-                            "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt}]})
+def _request(provider, key, model, system, user, max_tokens=1500, timeout=90):
+    if provider == "openai":
+        r = requests.post("https://api.openai.com/v1/chat/completions", timeout=timeout,
+                          headers={"Authorization": f"Bearer {key}"},
+                          json={"model": model, "temperature": 0, "max_tokens": max_tokens,
+                                "response_format": {"type": "json_object"},
+                                "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]})
+        get = lambda d: d["choices"][0]["message"]["content"]
+    elif provider == "anthropic":
+        r = requests.post("https://api.anthropic.com/v1/messages", timeout=timeout,
+                          headers={"x-api-key": key, "anthropic-version": "2023-06-01"},
+                          json={"model": model, "max_tokens": max_tokens, "temperature": 0, "system": system,
+                                "messages": [{"role": "user", "content": user}]})
+        get = lambda d: "".join(c.get("text", "") for c in d["content"])
+    elif provider == "gemini":
+        r = requests.post(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+                          timeout=timeout, headers={"x-goog-api-key": key},
+                          json={"systemInstruction": {"parts": [{"text": system}]},
+                                "contents": [{"role": "user", "parts": [{"text": user}]}],
+                                "generationConfig": {"temperature": 0, "maxOutputTokens": max_tokens,
+                                                     "responseMimeType": "application/json"}})
+        get = lambda d: d["candidates"][0]["content"]["parts"][0]["text"]
+    else:
+        raise ValueError(provider)
     if r.status_code != 200:
-        raise RuntimeError(f"OpenRouter HTTP {r.status_code}: {r.json().get('error', {}).get('message', '')[:120]}")
-    return parse(r.json()["choices"][0]["message"]["content"])
+        raise RuntimeError(f"{provider} HTTP {r.status_code}")
+    return get(r.json())
+
+
+def call(prompt: str, provider=None, key=None, model=None) -> dict:
+    det = detect()
+    if provider is None:
+        if not det:
+            raise RuntimeError("No approved LLM key set (GEMINI_API_KEY/GOOGLE_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY)")
+        provider, key, model = det
+    model = model or PROVIDERS[provider][1]
+    out = parse(_request(provider, key, model, SYSTEM, prompt))
+    out["provider"] = f"{provider}:{model}"
+    return out
 
 
 def parse(text: str) -> dict:
@@ -58,11 +107,12 @@ def parse(text: str) -> dict:
     return d
 
 
-def ping(key=None) -> bool:
-    key = key or os.environ.get("OPENROUTER_API_KEY")
+def ping() -> bool:
+    det = detect()
+    if not det:
+        return False
     try:
-        r = requests.post(URL, timeout=30, headers={"Authorization": f"Bearer {key}"},
-                          json={"model": MODEL, "max_tokens": 3, "messages": [{"role": "user", "content": "OK"}]})
-        return r.status_code == 200
+        _request(*det, "Reply with JSON.", 'Return {"ok": true}', max_tokens=20, timeout=30)
+        return True
     except Exception:
         return False

@@ -20,16 +20,21 @@ Try it with [`examples/synthetic_class.txt`](examples/synthetic_class.txt), a sy
 Limits of the web version, which come from the Vercel serverless limits:
 - **Transcripts only.** No video, so no Whisper ASR and no camera/face/lighting/audio features. Those need the full local app (`python app.py`). The web rating therefore equals the *transcript-only* variant in [EVAL.md](EVAL.md): 50% exact, 70% within one class.
 - Transcripts are capped at 3 MB (requests at about 4.5 MB). Links must be public http(s); private and internal addresses are refused. Requests time out after 60 s.
-- Uses the local rubric scorer. The LLM judge switches on automatically when `OPENROUTER_API_KEY` is set in the Vercel project's environment.
+- Uses the local rubric scorer. The LLM judge switches on automatically when an approved provider key (`GEMINI_API_KEY`/`GOOGLE_API_KEY`, `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`) is set in the environment.
 - Nothing is stored; transcripts are processed in memory.
 
 The full app (`app.py`, Gradio) accepts an **MP4 upload, a transcript upload, or a link to either**. `scripts/serve_share.sh` runs it under a restart loop with a Gradio share link and writes the URL to `share_url.txt`.
+
+## Hosting the full app (MP4 upload / link)
+`Dockerfile` builds the full app (ffmpeg + faster-whisper `base`, pre-downloaded) and serves Gradio on `$PORT` (7860).
+Measured on 2 CPU cores, a 60-minute class takes about 5 minutes: roughly 3.3 min of ASR, 1.3 min of frame sampling and under 10 s of audio stats. Uploads up to 2 GB are accepted, and ASR is capped at 120 minutes. The host needs about 2 GB RAM, and HTTP requests and queues must be allowed to stay open for 10 minutes or more.
+Free HF Docker/Gradio Spaces now require HF PRO, so the hosted full version is not live yet.
 
 ## How it works
 1. **Local media processing:** ffmpeg, OpenCV and faster-whisper run on CPU. Audio is turned into a transcript, using the uploaded VTT if there is one, and also into loudness and silence stats. Frames are sampled every 20 s to measure tutor face visibility, brightness and camera-off streaks.
 2. **Transcript features** (`classq/transcript.py`): tutor talk share, student turns/min, questions/min, students addressed by name, greeting and rapport cues in the first 5 minutes, new-joiner introductions, homework, wrap-up, praise/min, AV complaints, long silences, and time to the first content.
 3. **Rubric** (`classq/rubric.py`): seven themes taken from the organiser's tutor feedback (rapport/intro, individual engagement, energy, homework/conclusion, camera/face/lighting, AV quality, teaching aids). A deterministic scorer maps the features to 0–1 theme scores, then to an overall score, then to a label using ordinal cut-points.
-4. **LLM judgement (optional)** (`classq/llm.py`): OpenRouter receives **text only**: anonymised transcript lines with names replaced by Tutor/StudentN, plus the numeric features. It returns JSON with a label, theme scores, strengths and improvements, each with a timestamp. If the LLM is unavailable, the app falls back to the local scorer.
+4. **LLM judgement (optional)** (`classq/llm.py`): a provider-pluggable judge that uses only the client-approved APIs (Gemini, OpenAI or Anthropic), auto-detected from the env keys in that order. Override with `LLM_PROVIDER` / `LLM_MODEL`. The judge receives **text only**: anonymised transcript lines with names replaced by Tutor/StudentN, plus the numeric features. It returns JSON with a label, theme scores, strengths and improvements, each with a timestamp. If the LLM is unavailable, the app falls back to the local scorer.
 
 **Privacy:** no video, audio or frames leave the machine or Space. Recordings, transcripts, frames and the feature cache are git-ignored. Uploads are not stored.
 
@@ -37,7 +42,7 @@ The full app (`app.py`, Gradio) accepts an **MP4 upload, a transcript upload, or
 ```bash
 sudo apt-get install ffmpeg
 pip install -r requirements-full.txt   # requirements.txt is the slim Vercel set
-export OPENROUTER_API_KEY=...          # optional; OPENROUTER_MODEL defaults to openai/gpt-4o-mini
+export GEMINI_API_KEY=...   # optional: or GOOGLE_API_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY; without one, the local scorer is used
 python app.py                          # http://localhost:7860
 pytest -q
 ```

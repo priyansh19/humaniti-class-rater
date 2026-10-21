@@ -68,4 +68,4 @@ Full-data cut-points (used by the app): [0.338, 0.426, 0.626]
 - n=10 is tiny, so one class is worth 10 percentage points. Treat these numbers as a sanity check, not a benchmark.
 - Folder labels are coarse, and 'weak' vs 'quality issue' differ in kind: one is pedagogy, the other AV/camera.
 - The keyword features are English-centric. The Malayalam demo shows how they degrade.
-- The LLM variant was **not evaluated**: the OpenRouter API key returned 401 'API key expired'. Re-run with `python scripts/eval.py --llm` once a valid key is set.
+- The LLM variant was **not evaluated**: no approved provider key (Gemini/OpenAI/Anthropic) was available. Re-run with `python scripts/eval.py --llm` once one is set.

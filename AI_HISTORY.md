@@ -20,3 +20,7 @@ I built this with an AI agent assistant (Grok Bot) running on a private Linux bo
 
 ## 4. Deploy
 **Prompt (me):** provided working GitHub and HF tokens, and asked for the public repo `humaniti-class-rater` and an HF Space of the same name with `OPENROUTER_API_KEY` set as a Space secret. The AI pushed only code and docs; `.gitignore` excludes mp4/vtt/frames/cache/.env.
+
+## 5. Client constraints update
+**Prompt (me):** the client said the approved LLM services are the OpenAI, Gemini and Anthropic APIs, or fully local; OpenRouter is not approved. Mapping weak/quality-issue to Poor is OK if explained. Testers will upload or link full-length recordings.
+**AI actions:** replaced the OpenRouter client with a provider-pluggable judge (Gemini → OpenAI → Anthropic, auto-detected from env keys, plain REST, text only), with mocked tests for each provider and a test that an OpenRouter key alone does *not* enable the LLM. Attempted a free Docker Space for the full MP4 app.

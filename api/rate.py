@@ -1,5 +1,5 @@
 """Vercel serverless endpoint: POST JSON {transcript?: str, url?: str} -> rating.
-Transcript-only (no Whisper/torch/OpenCV). LLM judge auto-enabled if OPENROUTER_API_KEY is set."""
+Transcript-only (no Whisper/torch/OpenCV). LLM judge auto-enabled if an approved provider key is set."""
 import ipaddress
 import json
 import os
@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import requests  # noqa: E402
 
 from classq import transcript as T  # noqa: E402
+from classq.llm import enabled as llm_enabled
 from classq.pipeline import THEME_TEXT, assess  # noqa: E402
 
 MAX_BYTES = 3_000_000
@@ -49,7 +50,7 @@ def rate(body: dict) -> dict:
     if len(cues) < 3:
         raise ValueError("Could not parse a transcript (need a VTT or 'Speaker: text' lines)")
     f = {"text": T.features(cues), "evidence": T.evidence(cues), "excerpt": T.excerpt(cues)}
-    r = assess(f, use_llm=bool(os.environ.get("OPENROUTER_API_KEY")), multimodal=False)
+    r = assess(f, use_llm=llm_enabled(), multimodal=False)
     r["features"] = f["text"]
     r["evidence"] = f["evidence"][:25]
     r["theme_labels"] = {k: THEME_TEXT[k][0] for k in r["themes"]}
@@ -66,7 +67,7 @@ class handler(BaseHTTPRequestHandler):
         self.wfile.write(b)
 
     def do_GET(self):
-        self._send(200, {"ok": True, "llm_enabled": bool(os.environ.get("OPENROUTER_API_KEY"))})
+        self._send(200, {"ok": True, "llm_enabled": llm_enabled()})
 
     def do_POST(self):
         try:

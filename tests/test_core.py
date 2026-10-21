@@ -79,15 +79,32 @@ def test_llm_parse_and_prompt_has_no_media():
     assert "Arun" not in p and "Bina" not in p and LABELS[0] in p
 
 
-def test_llm_call_mocked(monkeypatch):
+@pytest.mark.parametrize("prov,env,payload", [
+    ("openai", "OPENAI_API_KEY", {"choices": [{"message": {"content": '{"label": "Average"}'}}]}),
+    ("anthropic", "ANTHROPIC_API_KEY", {"content": [{"type": "text", "text": '{"label": "Average"}'}]}),
+    ("gemini", "GEMINI_API_KEY", {"candidates": [{"content": {"parts": [{"text": '{"label": "Average"}'}]}}]}),
+])
+def test_llm_providers_mocked(monkeypatch, prov, env, payload):
+    for e in ["GEMINI_API_KEY", "GOOGLE_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "LLM_PROVIDER", "OPENROUTER_API_KEY"]:
+        monkeypatch.delenv(e, raising=False)
+    monkeypatch.setenv(env, "k")
     class R:
         status_code = 200
         def json(self):
-            return {"choices": [{"message": {"content": json.dumps({"label": "Average", "strengths": [], "improvements": []})}}]}
+            return payload
     sent = {}
-    monkeypatch.setattr(llm.requests, "post", lambda url, **kw: sent.update(kw) or R())
-    assert llm.call("hi", key="k")["label"] == "Average"
-    assert "files" not in sent and set(sent["json"]) >= {"model", "messages"}
+    monkeypatch.setattr(llm.requests, "post", lambda url, **kw: sent.update(url=url, **kw) or R())
+    assert llm.detect()[0] == prov
+    out = llm.call("hi")
+    assert out["label"] == "Average" and out["provider"].startswith(prov)
+    assert "openrouter" not in sent["url"] and "files" not in sent
+
+
+def test_no_llm_without_approved_key(monkeypatch):
+    for e in ["GEMINI_API_KEY", "GOOGLE_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY"]:
+        monkeypatch.delenv(e, raising=False)
+    monkeypatch.setenv("OPENROUTER_API_KEY", "x")
+    assert not llm.enabled()
 
 
 @pytest.mark.skipif(subprocess.run(["which", "ffmpeg"], capture_output=True).returncode, reason="no ffmpeg")

@@ -72,7 +72,7 @@ L += ["", f"Full-data cut-points (used by the app): {[round(float(c),3) for c in
       "- Folder labels are coarse, and 'weak' vs 'quality issue' differ in kind: one is pedagogy, the other AV/camera.",
       "- The keyword features are English-centric. The Malayalam demo shows how they degrade."]
 if not USE_LLM:
-    L += ["- The LLM variant was **not evaluated**: the OpenRouter API key returned 401 'API key expired'. Re-run with `python scripts/eval.py --llm` once a valid key is set."]
+    L += ["- The LLM variant was **not evaluated**: no approved provider key (Gemini/OpenAI/Anthropic) was available. Re-run with `python scripts/eval.py --llm` once one is set."]
 open("EVAL.md", "w").write("\n".join(L) + "\n")
 json.dump([round(float(c), 4) for c in full_cuts], open("classq/cuts.json", "w"))
 print("\n".join(L[:20]))

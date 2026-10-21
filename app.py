@@ -9,6 +9,7 @@ import requests
 
 from api.rate import fetch as fetch_text, _check_url
 
+from classq.llm import enabled as llm_enabled
 from classq.pipeline import THEME_TEXT, assess, features_from
 
 
@@ -76,7 +77,7 @@ with gr.Blocks(title="8x8 Class Quality Assessor") as demo:
         v = gr.File(label="Class recording (MP4)", file_types=[".mp4", ".mkv", ".mov", ".webm"], type="filepath")
         t = gr.File(label="Transcript (VTT/TXT, optional; skips ASR)", file_types=[".vtt", ".txt"], type="filepath")
     with gr.Row():
-        use_llm = gr.Checkbox(value=bool(os.environ.get("OPENROUTER_API_KEY")), label="Use LLM (OpenRouter) for the final judgement")
+        use_llm = gr.Checkbox(value=llm_enabled(), label="Use LLM judge (Gemini/OpenAI/Anthropic, text-only)")
         link = gr.Textbox(label="...or a public link to an MP4 or a VTT/TXT transcript")
         wm = gr.Dropdown(["tiny", "base", "small"], value="base", label="Whisper model (CPU)")
     btn = gr.Button("Assess", variant="primary")

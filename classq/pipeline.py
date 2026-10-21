@@ -58,7 +58,7 @@ def assess(f, use_llm=True, multimodal=True, cuts=None):
     if use_llm:
         try:
             out = llm.call(llm.build_prompt(f if multimodal else {**f, "frames": None, "audio": None}, themes))
-            res.update(llm=out, label=out["label"], source="LLM (OpenRouter, text-only)")
+            res.update(llm=out, label=out["label"], source=f"LLM judge ({out.get('provider')}, text-only)")
         except Exception as e:
             res["llm_error"] = str(e)
     return res

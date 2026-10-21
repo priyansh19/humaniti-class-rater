@@ -92,7 +92,7 @@ def audio_features(path) -> dict:
     }
 
 
-def transcribe(path, model_size="base", max_minutes=60, language=None) -> str:
+def transcribe(path, model_size="base", max_minutes=120, language=None) -> str:
     """Local faster-whisper on CPU; returns VTT text (no speaker labels)."""
     from faster_whisper import WhisperModel
     m = WhisperModel(model_size, device="cpu", compute_type="int8")

@@ -1,0 +1,10 @@
+cache
+*.mp4
+*.vtt
+tmp
+logs
+.env*
+.vercel
+.gradio
+.git
+__pycache__
