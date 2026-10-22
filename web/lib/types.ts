@@ -12,6 +12,9 @@ export interface Report {
   judge: string;
   content?: ContentMap;
   warnings: string[];
+  guard_flags?: string[];
+  mode?: "brief" | "advanced";
+  custom?: { label: Label; score: number; weights: Record<string, number>; thresholds: number[] };
   analysis?: { duration_s: number; transcript_source: string; roles_estimated: boolean; features: Record<string, Record<string, number>> };
 }
 export type JobStatus = "queued" | "running" | "done" | "failed";
@@ -28,4 +31,9 @@ export interface ContentTopic {
 export interface ContentMap {
   subject?: string; subject_confidence?: number; topics?: ContentTopic[]; metrics?: Record<string, number>;
   llm_subject?: string; llm_topics?: { topic: string; introduced_at: string; explained: boolean; practised: boolean; recapped: boolean; depth: number }[];
+}
+
+export interface Capabilities {
+  ok: boolean; mode: string; judge: string; video: boolean; embeddings: boolean;
+  missing: { llm_judge: string | null; video_processing: string; embeddings: string };
 }

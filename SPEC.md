@@ -55,7 +55,7 @@ EmbeddingGemma 2, run locally on CPU only, embeds about 5-min windows of audio, 
 | A11 | Domain content coverage (subject, topics, introduced/explained/practised/recapped, minutes, depth) is an extra, explicitly exploratory criterion. It is kept out of the pre-registered label model | Brief: "These are for you to explore"; owner request. Only 3 content remarks exist in feedbacks.pdf, so it is evaluated mainly for VTT/Whisper consistency |
 | A12 | A local open-weights multimodal embedding model (EmbeddingGemma 2) may be used. It runs fully locally, so no recording leaves the machine | Brief: "any tools/models/APIs"; organiser email: "fully local is also fine" |
 
-**Out of scope, because the brief does not ask for them:** user accounts and auth, persistent history of past assessments, batch processing, languages beyond what the models handle by default, and any label other than the four.
+**Out of scope for Brief mode, because the brief does not ask for them:** user accounts and auth, server-side persistent history of past assessments, batch processing, languages beyond what the models handle by default, and any label other than the four.
 
 ## 4. Open questions
 - **Q2: OpenRouter vs the approved list. Unresolved, flagged.** The owner (Priyansh) has no Gemini key and directed that OpenRouter (`OPENROUTER_API_KEY`) be the single gateway for all models, with the primary model, then a secondary model, then the local scorer. The organiser's email says OpenRouter is NOT approved (A4, R9). Routing OpenAI, Gemini or Anthropic models *through* OpenRouter still sends the anonymised payload to OpenRouter. Implementation: OpenRouter is supported and auto-detected first, with `provider.data_collection = "deny"`. Direct OpenAI, Gemini and Anthropic keys and a fully local model (llama.cpp) remain available. `RATER_LLM_PROVIDER` forces one path, for example `openai` or `local`. **Before submission, either the organiser approves OpenRouter or the deployed config uses a direct approved key or the local model.**
@@ -74,3 +74,26 @@ EmbeddingGemma 2, run locally on CPU only, embeds about 5-min windows of audio, 
 - The "unmute"/"mute" keywords are noise for AV complaints, because they are common in interactive classes.
 - Whisper output has no speaker labels. v2 needs a tutor/student proxy for ASR transcripts.
 - v1 tuned its weights after seeing all 10 classes. v2 fixes its feature set and model *before* running the eval, and fits only inside training folds.
+
+
+## Modes (v3)
+
+**Brief mode (default, `/`)** does exactly what the brief asks: one class in, one of the four labels out, with reasons. It is hardened against degraded input; see `docs/specs/guardrails.md`. Every case is a structured error or a confidence-capped result with a warning, never a crash: an empty, huge, binary or garbled transcript, a non-English transcript, a bad link, an oversized or invalid upload, missing speaker labels, a very short class, and judge failure (falls back to the local scorer).
+
+**Advanced mode (`/advanced`, `/history`, `/status`)** adds:
+
+- A developer config panel: model or provider, label cut-points, criterion weights, embeddings on or off, and an input cap.
+- Browser-local history (last 20 runs) with JSON and Markdown export.
+- A stricter rate limit (10 runs per 10 min per client, against 30 for Brief) and a configurable input cap.
+
+Advanced always returns the Brief result computed with the defaults, next to the custom-config result, so tuning never changes the default answer.
+
+> **Authorisation.** Priyansh authorised these extras (config panel, history, export, rate limits and input caps) for **Advanced mode only**. Grok Bot relayed this on Oct 22, 2026, 10:15 PM IST. Brief mode stays within the brief.
+
+**Hosted deployment (Vercel)** runs transcript-only with the deterministic local scorer:
+
+- The OpenRouter key has expired (HTTP 401), so the LLM judge is unavailable.
+- There are no Modal tokens, so there is no video worker.
+- There is no Gemini key.
+
+The UI says this in a capability banner and on `/status`, which lists the exact keys needed. See `docs/specs/hosted-api.md`.

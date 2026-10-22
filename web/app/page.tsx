@@ -1,24 +1,30 @@
 import { AssessForm } from "@/components/assess-form";
+import { CapabilityBanner } from "@/components/capability-banner";
+
+const STEPS = [
+  ["1 · Reads", "Speaker-labelled Zoom transcript: who talks, how often children respond, questions, praise, homework, long silences.", "from-violet-500 to-fuchsia-500"],
+  ["2 · Scores", "Rubric criteria taken from the organiser's own tutor feedback, each scored 1–5 with the numbers behind it.", "from-pink-500 to-rose-500"],
+  ["3 · Explains", "One of Poor, Average, Good or Excellent, with timestamped, anonymised quotes and concrete improvements.", "from-amber-400 to-orange-500"],
+];
 
 export default function Home() {
   return (
     <div className="space-y-8">
       <section className="space-y-3 pt-4">
-        <span className="inline-block rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 ring-1 ring-brand-100">8x8 · kids&apos; online chess classes</span>
-        <h1 className="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">How good was this class?</h1>
+        <span className="inline-block rounded-full bg-gradient-to-r from-violet-600 to-pink-600 px-3 py-1 text-xs font-semibold text-white shadow">8x8 · kids&apos; online chess classes</span>
+        <h1 className="max-w-3xl text-3xl font-extrabold tracking-tight sm:text-5xl">How good was <span className="rainbow-text">this class?</span></h1>
         <p className="max-w-2xl text-slate-600">
-          Upload a class recording or share a link. The analysis covers what was said, how the class sounded and what was on screen, then rates it
-          <b> Poor, Average, Good or Excellent</b> against a rubric built from the organiser&apos;s own tutor feedback. Every reason is tied to a timestamp.
+          Give it a class and get a rating of <b className="text-rose-600">Poor</b>, <b className="text-amber-600">Average</b>, <b className="text-sky-600">Good</b> or <b className="text-emerald-600">Excellent</b>, with specific, evidence-based reasons.
         </p>
       </section>
+      <CapabilityBanner />
       <AssessForm />
       <section className="grid gap-4 sm:grid-cols-3">
-        {[
-          ["Listens", "Local Whisper transcription; who talks, how often children respond, questions, praise, homework, dead air."],
-          ["Watches", "Frame sampling: camera-off moments while the tutor speaks, face visibility, lighting, 8x8 background, screen sharing."],
-          ["Judges", "A structured rubric judgement with timestamped evidence. Only anonymised text and numbers reach the LLM."],
-        ].map(([t, d]) => (
-          <div key={t} className="rounded-2xl border border-slate-200 bg-white p-4"><div className="font-semibold">{t}</div><p className="mt-1 text-sm text-slate-600">{d}</p></div>
+        {STEPS.map(([t, d, g]) => (
+          <div key={t} className="overflow-hidden rounded-2xl border border-white bg-white/80 shadow-sm">
+            <div className={`h-1.5 bg-gradient-to-r ${g}`} />
+            <div className="p-4"><div className="font-semibold">{t}</div><p className="mt-1 text-sm text-slate-600">{d}</p></div>
+          </div>
         ))}
       </section>
     </div>

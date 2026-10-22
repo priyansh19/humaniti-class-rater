@@ -1,5 +1,6 @@
 "use client";
-import { AlertTriangle, CheckCircle2, Clock, Download, Lightbulb, MessageSquareQuote, TrendingUp } from "lucide-react";
+import { downloadText, toMarkdown } from "@/lib/advanced";
+import { AlertTriangle, FileDown, CheckCircle2, Clock, Download, Lightbulb, MessageSquareQuote, TrendingUp } from "lucide-react";
 import { Alert, Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Progress } from "@/components/ui/primitives";
 import { cn } from "@/lib/cn";
 import { CRITERIA, LABELS, LABEL_STYLE, fmtTs, judgeLabel, scoreColor } from "@/lib/format";
@@ -43,6 +44,7 @@ export function ReportView({ report }: { report: Report }) {
               <Badge className="bg-slate-50 text-slate-700 ring-slate-200">{judgeLabel(report.judge)}</Badge>
               {report.analysis && <Badge className="bg-slate-50 text-slate-700 ring-slate-200"><Clock className="h-3 w-3" />{Math.round(report.analysis.duration_s / 60)} min · transcript: {report.analysis.transcript_source}{report.analysis.roles_estimated ? " (roles estimated)" : ""}</Badge>}
               <Button variant="outline" size="sm" onClick={download}><Download className="h-3.5 w-3.5" /> JSON</Button>
+              <Button variant="outline" size="sm" onClick={() => downloadText(`class-assessment-${report.label.toLowerCase()}.md`, toMarkdown(report), "text/markdown")}><FileDown className="h-3.5 w-3.5" /> Markdown</Button>
             </div>
             {isLocal && <Alert tone="warn">Scored by the local heuristic scorer (no LLM key configured). Its labels are indicative only. See Method &amp; eval.</Alert>}
           </div>
@@ -112,6 +114,11 @@ export function ReportView({ report }: { report: Report }) {
         </CardContent>
       </Card>
 
+      {report.guard_flags && report.guard_flags.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 text-xs"><span className="font-semibold text-slate-600">Input checks:</span>
+          {report.guard_flags.map((f) => <span key={f} className="rounded-full bg-amber-100 px-2.5 py-1 font-medium text-amber-800 ring-1 ring-amber-200">{f.replace(/_/g, " ")}</span>)}
+        </div>
+      )}
       {report.warnings.length > 0 && (
         <Alert tone="warn"><div className="flex gap-2"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /><ul className="space-y-1">{report.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul></div></Alert>
       )}

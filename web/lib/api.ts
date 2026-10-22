@@ -1,9 +1,10 @@
-import type { Health, Job, Report } from "./types";
+import type { AdvancedConfig } from "./advanced";
+import type { Capabilities, Health, Job, Report } from "./types";
 
 export const WORKER_URL = (process.env.NEXT_PUBLIC_WORKER_URL || "").replace(/\/$/, "");
 
 export class ApiError extends Error {
-  constructor(message: string, public status = 0) { super(message); }
+  constructor(message: string, public status = 0, public code = "") { super(message); }
 }
 
 async function call<T>(url: string, init?: RequestInit): Promise<T> {
@@ -14,9 +15,10 @@ async function call<T>(url: string, init?: RequestInit): Promise<T> {
     throw new ApiError("Could not reach the analysis service. Check your connection and try again.");
   }
   if (!res.ok) {
-    let msg = `Request failed (${res.status})`;
-    try { const j = await res.json(); msg = j.detail || j.error || msg; } catch { /* non-JSON */ }
-    throw new ApiError(msg, res.status);
+    let msg = `Request failed (${res.status})`, code = "";
+    try { const j = await res.json(); msg = typeof j.detail === "string" ? j.detail : j.error || msg; code = j.error || ""; } catch { /* non-JSON */ }
+    if (res.status === 504) msg = "The analysis took too long on the hosted service. Try a shorter transcript.";
+    throw new ApiError(msg, res.status, code);
   }
   return res.json() as Promise<T>;
 }
@@ -78,7 +80,13 @@ export async function getJob(id: string): Promise<Job> {
 }
 
 /** Transcript-only assessment: worker if configured, otherwise the Vercel Python fallback. */
-export async function assessTranscript(text: string | null, url: string | null): Promise<Report> {
-  const body = { transcript_text: text || null, transcript_url: url || null };
+export async function assessTranscript(text: string | null, url: string | null, advanced?: AdvancedConfig): Promise<Report> {
+  const body = { transcript_text: text || null, transcript_url: url || null, ...(advanced ? { advanced } : {}) };
+  if (advanced) return call<Report>(`/api/py/assess`, json(body));
   return WORKER_URL ? call<Report>(`${WORKER_URL}/assess/transcript`, json(body)) : call<Report>(`/api/py/assess`, json(body));
+}
+
+/** What the hosted (Vercel) service can do right now, and which keys are missing. */
+export async function capabilities(): Promise<Capabilities | null> {
+  try { return await call<Capabilities>(`/api/py/health`, { cache: "no-store" }); } catch { return null; }
 }
