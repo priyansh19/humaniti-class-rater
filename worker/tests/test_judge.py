@@ -11,7 +11,7 @@ from rater.judge.ordinal import fit
 from rater.judge.rubric import CRITERIA, criterion_scores
 from rater.models import LABELS
 
-KEYS = ["GEMINI_API_KEY", "GOOGLE_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "RATER_LLM_PROVIDER", "RATER_LLM_MODEL"]
+KEYS = ["GEMINI_API_KEY", "GOOGLE_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "RATER_LLM_PROVIDER", "RATER_LLM_MODEL", "RATER_LOCAL_LLM_URL"]
 
 
 @pytest.fixture
@@ -64,11 +64,12 @@ def test_no_key_means_local(analysis, monkeypatch):
     assert judge(analysis).judge == "local"
 
 
-@pytest.mark.parametrize("prov,env", [("gemini", "GEMINI_API_KEY"), ("openai", "OPENAI_API_KEY"), ("anthropic", "ANTHROPIC_API_KEY")])
+@pytest.mark.parametrize("prov,env", [("gemini", "GEMINI_API_KEY"), ("openai", "OPENAI_API_KEY"), ("anthropic", "ANTHROPIC_API_KEY"),
+                                      ("local", "RATER_LOCAL_LLM_URL")])
 def test_each_provider_mocked(analysis, monkeypatch, prov, env):
-    monkeypatch.setenv(env, "test-key")
+    monkeypatch.setenv(env, "http://127.0.0.1:8081/v1" if prov == "local" else "test-key")
     ans = _llm_answer()
-    bodies = {"gemini": {"candidates": [{"content": {"parts": [{"text": json.dumps(ans)}]}}]},
+    bodies = {"local": {"choices": [{"message": {"content": json.dumps(ans)}}]},"gemini": {"candidates": [{"content": {"parts": [{"text": json.dumps(ans)}]}}]},
               "openai": {"choices": [{"message": {"content": json.dumps(ans)}}]},
               "anthropic": {"content": [{"type": "tool_use", "input": ans}]}}
     sent = {}
@@ -86,6 +87,12 @@ def test_each_provider_mocked(analysis, monkeypatch, prov, env):
     # hallucinated timestamp 59:59 removed, real one kept
     assert any("removed" in w for w in r.warnings)
     assert any(c.evidence for c in r.criteria.values())
+
+
+def test_cloud_key_preferred_over_local(monkeypatch):
+    monkeypatch.setenv("RATER_LOCAL_LLM_URL", "http://127.0.0.1:8081/v1")
+    monkeypatch.setenv("GEMINI_API_KEY", "k")
+    assert providers.detect() == "gemini"
 
 
 def test_invalid_llm_output_falls_back(analysis, monkeypatch):

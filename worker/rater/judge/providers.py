@@ -10,8 +10,10 @@ import re
 
 import httpx
 
-DEFAULTS = {"gemini": "gemini-2.5-flash", "openai": "gpt-4o-mini", "anthropic": "claude-sonnet-4-5"}
-ENV_KEYS = {"gemini": ("GEMINI_API_KEY", "GOOGLE_API_KEY"), "openai": ("OPENAI_API_KEY",), "anthropic": ("ANTHROPIC_API_KEY",)}
+DEFAULTS = {"gemini": "gemini-2.5-flash", "openai": "gpt-4o-mini", "anthropic": "claude-sonnet-4-5", "local": "local"}
+# "local" = a fully local OpenAI-compatible server (e.g. llama.cpp `llama-server`); its "key" is the base URL.
+ENV_KEYS = {"gemini": ("GEMINI_API_KEY", "GOOGLE_API_KEY"), "openai": ("OPENAI_API_KEY",), "anthropic": ("ANTHROPIC_API_KEY",),
+            "local": ("RATER_LOCAL_LLM_URL",)}
 
 
 class ProviderError(RuntimeError):
@@ -26,7 +28,7 @@ def detect() -> str | None:
     forced = os.environ.get("RATER_LLM_PROVIDER")
     if forced in ENV_KEYS:
         return forced if _key(forced) else None
-    return next((p for p in ("gemini", "openai", "anthropic") if _key(p)), None)
+    return next((p for p in ("gemini", "openai", "anthropic", "local") if _key(p)), None)
 
 
 def _gemini_schema(s):
@@ -113,7 +115,23 @@ class Anthropic(Provider):
         return block["input"]
 
 
-REGISTRY = {"gemini": Gemini, "openai": OpenAI, "anthropic": Anthropic}
+class Local(Provider):
+    """Fully local LLM behind an OpenAI-compatible API (llama.cpp server). Nothing leaves the host."""
+    name = "local"
+
+    def __init__(self, model=None, timeout: float = 1800):
+        super().__init__(model, timeout)
+        self.base = self.key.rstrip("/")
+
+    def complete_json(self, system, user, schema):
+        d = self._post(f"{self.base}/chat/completions", {},
+                       {"model": self.model, "temperature": 0, "max_tokens": 2500,
+                        "response_format": {"type": "json_schema", "json_schema": {"name": "assessment", "schema": _strip_bounds(schema)}},
+                        "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]})
+        return _parse_json(d["choices"][0]["message"]["content"])
+
+
+REGISTRY = {"gemini": Gemini, "openai": OpenAI, "anthropic": Anthropic, "local": Local}
 
 
 def get(name: str | None = None) -> Provider | None:
