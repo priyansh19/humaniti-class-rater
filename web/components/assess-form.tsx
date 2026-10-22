@@ -3,6 +3,7 @@ import { FileText, FileVideo, Link2, Loader2, ScrollText, ShieldCheck, Sparkles,
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Alert, Button, Card, CardContent, Input, Progress, Textarea } from "@/components/ui/primitives";
+import { ScoringProgress } from "@/components/scoring-progress";
 import { WorkerStatus, useWorker } from "@/components/worker-status";
 import type { AdvancedConfig } from "@/lib/advanced";
 import { ApiError, assessTranscript, createLinkJob, uploadRecording } from "@/lib/api";
@@ -96,19 +97,19 @@ export function AssessForm({ advanced, onResult }: { advanced?: AdvancedConfig; 
 
   return (
     <Card className="overflow-hidden border-violet-200 shadow-lg shadow-violet-100">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-violet-100 bg-gradient-to-r from-violet-50 to-pink-50 px-5 py-3">
-        <div className="flex gap-1 rounded-xl bg-white/80 p-1 ring-1 ring-violet-100" role="tablist">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-violet-100 bg-gradient-to-r from-violet-50 to-pink-50 px-3 py-3 sm:px-5">
+        <div className="-mx-1 flex max-w-full gap-1 overflow-x-auto rounded-xl bg-white/80 p-1 ring-1 ring-violet-100" role="tablist">
           {tabs.map((t) => (
             <button key={t.key} role="tab" aria-selected={mode === t.key} disabled={t.disabled || busy} onClick={() => setMode(t.key)}
               title={t.disabled ? "Needs the video analysis worker (offline on the hosted demo)" : undefined}
-              className={cn("flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition", mode === t.key ? "bg-violet-600 font-medium text-white shadow" : "text-slate-600 hover:text-violet-800", t.disabled && "cursor-not-allowed opacity-40")}>
+              className={cn("tap flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm transition sm:px-3", mode === t.key ? "bg-violet-600 font-medium text-white shadow" : "text-slate-600 hover:text-violet-800", t.disabled && "cursor-not-allowed opacity-40")}>
               {t.icon}{t.label}
             </button>
           ))}
         </div>
         <WorkerStatus {...worker} />
       </div>
-      <CardContent className="space-y-4 pt-5">
+      <CardContent className="space-y-4 px-3 pt-5 sm:px-5">
         {mode === "transcript" && (
           <div className="space-y-3">
             <label onDragOver={(e) => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)}
@@ -151,12 +152,13 @@ export function AssessForm({ advanced, onResult }: { advanced?: AdvancedConfig; 
         {busy && mode === "upload" && (
           <div className="space-y-1"><div className="flex justify-between text-xs text-slate-600"><span>Uploading in chunks…</span><span>{Math.round(progress * 100)}%</span></div><Progress value={progress * 100} /></div>
         )}
+        {busy && mode === "transcript" && <ScoringProgress />}
         {error && <Alert tone="error">{error}</Alert>}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
           <p className="flex items-center gap-1.5 text-xs text-slate-500"><ShieldCheck className="h-4 w-4 text-emerald-600" /> Names are anonymised before scoring. Nothing is stored on the server.</p>
-          <div className="flex gap-2">
+          <div className="flex w-full gap-2 sm:w-auto">
             {busy && mode === "upload" && <Button variant="outline" onClick={() => { abort.current?.abort(); setBusy(false); }}>Cancel</Button>}
-            <Button size="lg" onClick={submit} disabled={busy || (mode === "upload" && !file)} className="bg-gradient-to-r from-violet-600 to-pink-600 hover:from-violet-700 hover:to-pink-700">
+            <Button size="lg" onClick={submit} disabled={busy || (mode === "upload" && !file)} className="tap w-full bg-gradient-to-r from-violet-600 to-pink-600 hover:from-violet-700 hover:to-pink-700 sm:w-auto">
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               {busy ? "Assessing…" : "Assess class"}
             </Button>

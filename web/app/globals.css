@@ -26,3 +26,49 @@ body {
   background-size: 32px 32px; background-position: 0 0, 0 16px, 16px -16px, -16px 0;
 }
 input[type="range"] { accent-color: #7c3aed; }
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---- motion (all disabled under prefers-reduced-motion) ---- */
+@keyframes fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes pop { 0% { transform: scale(.85); opacity: 0; } 60% { transform: scale(1.04); } 100% { transform: scale(1); opacity: 1; } }
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+.page-enter { animation: fade-up .35s ease-out both; }
+.stagger > * { animation: fade-up .4s ease-out both; }
+.stagger > *:nth-child(2) { animation-delay: .05s; } .stagger > *:nth-child(3) { animation-delay: .1s; }
+.stagger > *:nth-child(4) { animation-delay: .15s; } .stagger > *:nth-child(5) { animation-delay: .2s; }
+.stagger > *:nth-child(6) { animation-delay: .25s; } .stagger > *:nth-child(n+7) { animation-delay: .3s; }
+.grow-x { transform-origin: left; animation: grow-x .7s cubic-bezier(.2,.8,.2,1) both; }
+.pop { animation: pop .45s cubic-bezier(.2,.8,.2,1) both; }
+.skeleton { position: relative; overflow: hidden; background: rgba(148,163,184,.18); border-radius: 1rem; }
+.skeleton::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent); animation: shimmer 1.3s infinite; }
+.tap { transition: transform .12s ease, box-shadow .2s ease, background-color .2s ease; -webkit-tap-highlight-color: transparent; }
+.tap:active { transform: scale(.97); }
+@media (hover: hover) { .lift { transition: transform .2s ease, box-shadow .2s ease; } .lift:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -12px rgba(124,58,237,.35); } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-delay: 0s !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+}
+html, body { overflow-x: hidden; }
+details > summary { list-style: none; } details > summary::-webkit-details-marker { display: none; }
+details[open] .chev { transform: rotate(180deg); }
+
+/* ---- dark theme: remaps the light utility palette ---- */
+.dark { color-scheme: dark; }
+.dark body { color: #e2e8f0; background: radial-gradient(60rem 30rem at 0% -10%, rgba(236,72,153,.12), transparent 60%), radial-gradient(50rem 30rem at 100% 0%, rgba(56,189,248,.10), transparent 60%), #0b0b16; }
+.dark .bg-white, .dark .bg-white\/80, .dark .bg-white\/70 { background-color: rgb(20 20 36 / .92) !important; }
+.dark .bg-slate-50, .dark .bg-slate-100 { background-color: #1c1c30 !important; }
+.dark .border-slate-200, .dark .border-violet-100, .dark .border-violet-200, .dark .border-white, .dark .border-white\/60, .dark .border-slate-300 { border-color: #2c2c48 !important; }
+.dark .text-slate-900, .dark .text-slate-800 { color: #f1f5f9 !important; }
+.dark .text-slate-700, .dark .text-slate-600 { color: #cbd5e1 !important; }
+.dark .text-slate-500 { color: #94a3b8 !important; }
+.dark .ring-slate-200, .dark .ring-violet-100 { --tw-ring-color: #2c2c48 !important; }
+.dark .from-violet-50, .dark .from-violet-50.via-pink-50 { --tw-gradient-from: #1e1633 !important; }
+.dark .to-pink-50, .dark .to-amber-50 { --tw-gradient-to: #24142a !important; }
+.dark .via-pink-50 { --tw-gradient-via: #221430 !important; }
+.dark .bg-sky-50 { background-color: #0c2233 !important; } .dark .text-sky-900 { color: #bae6fd !important; }
+.dark .bg-amber-50 { background-color: #2a1f08 !important; } .dark .text-amber-900, .dark .text-amber-800 { color: #fde68a !important; }
+.dark .bg-rose-50 { background-color: #2c0f16 !important; } .dark .text-rose-900, .dark .text-rose-800 { color: #fecdd3 !important; }
+.dark .checker { background-color: #141424; }
+.dark input, .dark textarea, .dark select { color: #e2e8f0; }
+.dark .skeleton::after { background: linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent); }
