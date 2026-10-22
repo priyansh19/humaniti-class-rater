@@ -54,6 +54,28 @@ def cache(kind):
     return out
 
 
+PARTIAL = os.path.join(HERE, "../data/emb_eval_partial.json")      # resumable: per (kind, pool) results
+
+
+def _partial() -> dict:
+    if os.path.exists(PARTIAL):
+        with open(PARTIAL) as fh:
+            return json.load(fh)
+    return {}
+
+
+def cached_nested(tag, F, y, pool):
+    part = _partial()
+    if tag not in part:
+        r = nested(F, y, pool)
+        part = _partial()
+        part[tag] = {k: (v.tolist() if hasattr(v, "tolist") else v) for k, v in r.items()}
+        with open(PARTIAL, "w") as fh:
+            json.dump(part, fh)
+        print("cached", tag, flush=True)
+    return part[tag]
+
+
 def nested(F, y, pool):
     P, ch = [], []
     for i in range(len(F)):
@@ -87,9 +109,9 @@ def main():
             f.update({f"emb.{k}": v for k, v in recs[i + (".asr" if kind == "asr" else "")]["probes"].items()})
             F.append(f)
         res["ablation"][kind] = {
-            "current (v2.2 pool)": nested(F, y, candidates_v22()),
-            "current + embedding probes": nested(F, y, candidates_probes(probe_keys)),
-            "embedding probes only": nested(F, y, candidates_probes(probe_keys, with_criteria=False)),
+            "current (v2.2 pool)": cached_nested(f"{kind}:current", F, y, candidates_v22()),
+            "current + embedding probes": cached_nested(f"{kind}:plus", F, y, candidates_probes(probe_keys)),
+            "embedding probes only": cached_nested(f"{kind}:probes", F, y, candidates_probes(probe_keys, with_criteria=False)),
             "ids": ids, "true": y}
     # retrieval agreement
     hit, chance, n = 0, 0.0, 0
