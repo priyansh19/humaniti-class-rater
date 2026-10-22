@@ -3,14 +3,14 @@ import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 
 /** Inline script run before paint so the saved theme never flashes. */
-export const THEME_SCRIPT = `try{var t=localStorage.getItem("theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}`;
+export const THEME_SCRIPT = `try{var h=document.documentElement;if(localStorage.getItem("theme")==="dark"){h.classList.add("dark");h.classList.remove("light");h.style.colorScheme="dark"}}catch(e){}`;
 
 export function ThemeToggle() {
   const [dark, setDark] = useState(false);
   useEffect(() => setDark(document.documentElement.classList.contains("dark")), []);
   const flip = () => {
     const d = !dark; setDark(d);
-    document.documentElement.classList.toggle("dark", d);
+    const h = document.documentElement; h.classList.toggle("dark", d); h.classList.toggle("light", !d); h.style.colorScheme = d ? "dark" : "light";
     try { localStorage.setItem("theme", d ? "dark" : "light"); } catch { /* private mode */ }
   };
   return (
