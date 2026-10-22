@@ -1,0 +1,7 @@
+data
+tests
+eval
+__pycache__
+*.mp4
+*.vtt
+.env*
