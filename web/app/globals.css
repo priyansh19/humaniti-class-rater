@@ -54,6 +54,7 @@ details > summary { list-style: none; } details > summary::-webkit-details-marke
 details[open] .chev { transform: rotate(180deg); }
 
 /* ---- dark theme: remaps the light utility palette ---- */
+:root { color-scheme: light; }
 .dark { color-scheme: dark; }
 .dark body { color: #e2e8f0; background: radial-gradient(60rem 30rem at 0% -10%, rgba(236,72,153,.12), transparent 60%), radial-gradient(50rem 30rem at 100% 0%, rgba(56,189,248,.10), transparent 60%), #0b0b16; }
 .dark .bg-white, .dark .bg-white\/80, .dark .bg-white\/70 { background-color: rgb(20 20 36 / .92) !important; }
