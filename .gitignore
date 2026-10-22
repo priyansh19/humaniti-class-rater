@@ -20,3 +20,4 @@ share_url.txt
 .gradio/
 worker/data/
 *.npz
+!worker/tests/fixtures/*.vtt
