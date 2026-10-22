@@ -105,7 +105,7 @@ def embed_class(media_path: str | None, utts: list[Utterance], duration: float, 
                 w.vec["audio"] = _norm(model.encode({"audio": x[: int(WINDOW_S * 16000)].astype(np.float32)}, convert_to_numpy=True,
                                                     processing_kwargs=AUDIO_KW), dim)
         if "video" in mods:
-            from PIL import Image                                 # only needed for frames
+            from PIL import Image  # only needed for frames
             imgs = [Image.fromarray(f[:, :, ::-1]) for t, f in frames(media_path, every_s=1 / fps, width=448, start=t0, dur=t1 - t0)][:MAX_FRAMES]
             if imgs:
                 w.vec["video"] = _norm(model.encode({"video": imgs}, convert_to_numpy=True, processing_kwargs={

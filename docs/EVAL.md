@@ -143,3 +143,22 @@ Only three feedback remarks touch on content, so the agreement check is very sma
 - The frame-layout classifier thresholds were checked against 3 hand-inspected frames (one per layout type). That is a check of what layout is on screen, not of the quality labels.
 - 'weak' and 'quality issue' fail in different ways (pedagogy vs AV/camera) but share the Poor label.
 - The keyword cues are English. The Malayalam demo shows how far they degrade.
+
+## EmbeddingGemma 2 ablation (`python -m eval.embed_extract` then `python -m eval.embed_eval`)
+
+Local only (CPU, bf16), 5-minute windows of video + audio + transcript, zero-shot rubric probes. Nested LOO: the inner LOO picks the model from a pool declared before the run; the outer fold is never used for tuning. Results: `worker/eval/results/embeddings.json`.
+
+| transcript | model | exact | within ±1 | MAE |
+|---|---|---|---|---|
+| VTT | v2.2 pool | 20% | 50% | 1.5 |
+| VTT | v2.2 + embedding probes | 10% | 30% | 1.8 |
+| VTT | embedding probes only | 30% | 70% | 1.1 |
+| Whisper (MP4 path) | v2.2 pool | 70% | 100% | 0.3 |
+| Whisper (MP4 path) | v2.2 + embedding probes | 70% | 100% | 0.3 |
+| Whisper (MP4 path) | embedding probes only | 30% | 70% | 1.0 |
+
+Other checks: top-2 retrieved windows contain keyword-tagged evidence 69% of the time (chance 52%, n = 77). Semantic content coverage agrees on the top topic in 5/12 classes vs 9/12 for keywords (VTT vs Whisper).
+
+**Decision: not adopted for the label.** Adding probes to v2.2 helps neither path: it ties on Whisper and hurts on VTT. Probes-only on VTT (30%) is still below the 40% always-Poor baseline, and choosing it after seeing outer-fold results would be test-set tuning. Embeddings stay off by default (`RATER_EMBEDDINGS=0`) as an optional evidence-retrieval module.
+
+**Cost (60-min class, CPU):** 432 s wall time for embedding, peak RSS 3.8 GB. Across all 12 recordings (38-89 min): 238-756 s, 3.4-4.7 GB.

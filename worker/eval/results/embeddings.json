@@ -1,0 +1,470 @@
+{
+ "runtime": {
+  "demo-malayalam": {
+   "minutes": 52,
+   "seconds": 343,
+   "maxrss_MB": 4471
+  },
+  "quality_issue-B392-2026-09-02": {
+   "minutes": 60,
+   "seconds": 432,
+   "maxrss_MB": 3788
+  },
+  "demo-english": {
+   "minutes": 44,
+   "seconds": 314,
+   "maxrss_MB": 4296
+  },
+  "weak-B558-2026-09-05": {
+   "minutes": 46,
+   "seconds": 238,
+   "maxrss_MB": 3626
+  },
+  "excellent-B491-2026-06-29": {
+   "minutes": 54,
+   "seconds": 374,
+   "maxrss_MB": 4707
+  },
+  "good-B435-2026-07-25": {
+   "minutes": 44,
+   "seconds": 756,
+   "maxrss_MB": 3434
+  },
+  "average-B435-2026-08-28": {
+   "minutes": 38,
+   "seconds": 280,
+   "maxrss_MB": 3455
+  },
+  "weak-B482-2026-09-02": {
+   "minutes": 59,
+   "seconds": 335,
+   "maxrss_MB": 3401
+  },
+  "excellent-B472-2026-08-24": {
+   "minutes": 56,
+   "seconds": 366,
+   "maxrss_MB": 4648
+  },
+  "average-B516-2026-09-03": {
+   "minutes": 44,
+   "seconds": 336,
+   "maxrss_MB": 3998
+  },
+  "quality_issue-B441-2026-08-26": {
+   "minutes": 89,
+   "seconds": 622,
+   "maxrss_MB": 3557
+  },
+  "good-B552-2026-09-02": {
+   "minutes": 46,
+   "seconds": 260,
+   "maxrss_MB": 3607
+  }
+ },
+ "ablation": {
+  "vtt": {
+   "current (v2.2 pool)": {
+    "exact": 0.2,
+    "within1": 0.5,
+    "mae": 1.5,
+    "cm": [
+     [
+      2,
+      0,
+      2,
+      0
+     ],
+     [
+      1,
+      0,
+      1,
+      0
+     ],
+     [
+      1,
+      0,
+      0,
+      1
+     ],
+     [
+      2,
+      0,
+      0,
+      0
+     ]
+    ],
+    "chosen": [
+     "ologit:1.0:homework_closure",
+     "ologit:1.0:homework_closure",
+     "ologit:5.0:homework_closure",
+     "ologit:5.0:homework_closure",
+     "ologit:1.0:energy",
+     "ologit:1.0:energy",
+     "ologit:5.0:homework_closure",
+     "ologit:1.0:homework_closure+teaching_aids",
+     "ologit:5.0:homework_closure",
+     "ologit:1.0:energy+presentation"
+    ],
+    "pred": [
+     "Poor",
+     "Good",
+     "Poor",
+     "Poor",
+     "Poor",
+     "Excellent",
+     "Poor",
+     "Good",
+     "Poor",
+     "Good"
+    ]
+   },
+   "current + embedding probes": {
+    "exact": 0.1,
+    "within1": 0.3,
+    "mae": 1.8,
+    "cm": [
+     [
+      1,
+      0,
+      3,
+      0
+     ],
+     [
+      1,
+      0,
+      0,
+      1
+     ],
+     [
+      1,
+      0,
+      0,
+      1
+     ],
+     [
+      2,
+      0,
+      0,
+      0
+     ]
+    ],
+    "chosen": [
+     "ologit:1.0:individual_attention+emb.children_answering.text",
+     "ologit:1.0:individual_attention+emb.camera_on_face.video",
+     "ologit:1.0:emb.warm_rapport.audio",
+     "ologit:1.0:emb.children_answering.text",
+     "ologit:1.0:energy",
+     "ologit:1.0:emb.children_answering.audio",
+     "ologit:1.0:rapport+emb.children_answering.audio",
+     "ologit:1.0:homework_closure+teaching_aids",
+     "ologit:5.0:homework_closure",
+     "ologit:1.0:energy+emb.camera_on_face.video"
+    ],
+    "pred": [
+     "Poor",
+     "Excellent",
+     "Poor",
+     "Poor",
+     "Poor",
+     "Excellent",
+     "Good",
+     "Good",
+     "Poor",
+     "Good"
+    ]
+   },
+   "embedding probes only": {
+    "exact": 0.3,
+    "within1": 0.7,
+    "mae": 1.1,
+    "cm": [
+     [
+      3,
+      1,
+      0,
+      0
+     ],
+     [
+      1,
+      0,
+      0,
+      1
+     ],
+     [
+      1,
+      0,
+      0,
+      1
+     ],
+     [
+      1,
+      0,
+      1,
+      0
+     ]
+    ],
+    "chosen": [
+     "ologit:1.0:emb.children_answering.audio+emb.children_answering.text",
+     "ologit:1.0:emb.camera_on_face.video+emb.children_answering.audio",
+     "ologit:1.0:emb.children_answering.audio+emb.warm_rapport.audio",
+     "ologit:1.0:emb.children_answering.text",
+     "ologit:1.0:emb.children_answering.audio+emb.energetic_tutor.video",
+     "ologit:1.0:emb.children_answering.audio",
+     "ologit:1.0:emb.children_answering.audio+emb.children_answering.text",
+     "ologit:1.0:emb.children_answering.text+emb.energetic_tutor.video",
+     "ologit:1.0:emb.children_answering.audio+emb.children_answering.text",
+     "ologit:1.0:emb.children_answering.text+emb.energetic_tutor.video"
+    ],
+    "pred": [
+     "Poor",
+     "Excellent",
+     "Good",
+     "Poor",
+     "Poor",
+     "Excellent",
+     "Poor",
+     "Poor",
+     "Poor",
+     "Average"
+    ]
+   },
+   "ids": [
+    "average-B435-2026-08-28",
+    "average-B516-2026-09-03",
+    "excellent-B472-2026-08-24",
+    "excellent-B491-2026-06-29",
+    "good-B435-2026-07-25",
+    "good-B552-2026-09-02",
+    "quality_issue-B392-2026-09-02",
+    "quality_issue-B441-2026-08-26",
+    "weak-B482-2026-09-02",
+    "weak-B558-2026-09-05"
+   ],
+   "true": [
+    "Average",
+    "Average",
+    "Excellent",
+    "Excellent",
+    "Good",
+    "Good",
+    "Poor",
+    "Poor",
+    "Poor",
+    "Poor"
+   ]
+  },
+  "asr": {
+   "current (v2.2 pool)": {
+    "exact": 0.7,
+    "within1": 1.0,
+    "mae": 0.3,
+    "cm": [
+     [
+      4,
+      0,
+      0,
+      0
+     ],
+     [
+      2,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      1,
+      1,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      2
+     ]
+    ],
+    "chosen": [
+     "ologit:1.0:individual_attention+energy",
+     "ologit:1.0:energy+av_quality",
+     "ologit:1.0:energy",
+     "ologit:1.0:energy",
+     "ologit:1.0:energy",
+     "ologit:1.0:energy",
+     "ologit:1.0:energy",
+     "ologit:1.0:energy",
+     "ologit:1.0:energy",
+     "ologit:1.0:energy"
+    ],
+    "pred": [
+     "Poor",
+     "Poor",
+     "Excellent",
+     "Excellent",
+     "Good",
+     "Average",
+     "Poor",
+     "Poor",
+     "Poor",
+     "Poor"
+    ]
+   },
+   "current + embedding probes": {
+    "exact": 0.7,
+    "within1": 1.0,
+    "mae": 0.3,
+    "cm": [
+     [
+      4,
+      0,
+      0,
+      0
+     ],
+     [
+      2,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      1,
+      1,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      2
+     ]
+    ],
+    "chosen": [
+     "ologit:1.0:individual_attention+energy",
+     "ologit:1.0:energy+av_quality",
+     "ologit:1.0:energy",
+     "ologit:1.0:energy",
+     "ologit:1.0:energy",
+     "ologit:1.0:energy",
+     "ologit:1.0:energy",
+     "ologit:1.0:energy",
+     "ologit:1.0:energy",
+     "ologit:1.0:energy"
+    ],
+    "pred": [
+     "Poor",
+     "Poor",
+     "Excellent",
+     "Excellent",
+     "Good",
+     "Average",
+     "Poor",
+     "Poor",
+     "Poor",
+     "Poor"
+    ]
+   },
+   "embedding probes only": {
+    "exact": 0.3,
+    "within1": 0.7,
+    "mae": 1.0,
+    "cm": [
+     [
+      3,
+      0,
+      1,
+      0
+     ],
+     [
+      1,
+      0,
+      0,
+      1
+     ],
+     [
+      1,
+      0,
+      0,
+      1
+     ],
+     [
+      0,
+      0,
+      2,
+      0
+     ]
+    ],
+    "chosen": [
+     "ologit:1.0:emb.children_answering.audio",
+     "ologit:1.0:emb.camera_on_face.video+emb.children_answering.audio",
+     "ologit:1.0:emb.children_answering.audio+emb.warm_rapport.audio",
+     "ologit:1.0:emb.camera_on_face.video+emb.children_answering.audio",
+     "ologit:1.0:emb.children_answering.audio+emb.energetic_tutor.video",
+     "ologit:1.0:emb.children_answering.audio",
+     "ologit:1.0:emb.energetic_tutor.audio+emb.warm_rapport.audio",
+     "ologit:1.0:emb.camera_on_face.video+emb.warm_rapport.audio",
+     "ologit:1.0:emb.camera_on_face.video+emb.warm_rapport.audio",
+     "ologit:5.0:emb.energetic_tutor.video"
+    ],
+    "pred": [
+     "Poor",
+     "Excellent",
+     "Good",
+     "Good",
+     "Poor",
+     "Excellent",
+     "Poor",
+     "Poor",
+     "Poor",
+     "Good"
+    ]
+   },
+   "ids": [
+    "average-B435-2026-08-28",
+    "average-B516-2026-09-03",
+    "excellent-B472-2026-08-24",
+    "excellent-B491-2026-06-29",
+    "good-B435-2026-07-25",
+    "good-B552-2026-09-02",
+    "quality_issue-B392-2026-09-02",
+    "quality_issue-B441-2026-08-26",
+    "weak-B482-2026-09-02",
+    "weak-B558-2026-09-05"
+   ],
+   "true": [
+    "Average",
+    "Average",
+    "Excellent",
+    "Excellent",
+    "Good",
+    "Good",
+    "Poor",
+    "Poor",
+    "Poor",
+    "Poor"
+   ]
+  }
+ },
+ "retrieval": {
+  "top2_contains_keyword_evidence": 0.69,
+  "chance": 0.52,
+  "n": 77,
+  "per_criterion": {
+   "rapport": "10/12",
+   "energy": "8/12",
+   "homework_closure": "6/10",
+   "teaching_aids": "10/12",
+   "content_coverage": "10/12",
+   "individual_attention": "6/9",
+   "av_quality": "3/10"
+  }
+ },
+ "content": {
+  "n": 12,
+  "semantic_top_topic_agree": "5/12",
+  "keyword_top_topic_agree": "9/12",
+  "semantic_mean_jaccard": 0.56,
+  "keyword_mean_jaccard": 0.6,
+  "feedback_practice_check_semantic": true
+ }
+}
