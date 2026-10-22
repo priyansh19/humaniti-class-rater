@@ -13,7 +13,7 @@ export default function StatusPage() {
   return (
     <div className="space-y-6 pt-4">
       <h1 className="text-3xl font-extrabold"><span className="rainbow-text">Service status</span></h1>
-      {c === undefined ? <div className="h-40 animate-pulse rounded-2xl bg-white/60" /> : c === null ?
+      {c === undefined ? <div className="space-y-2"><div className="skeleton h-16" /><div className="skeleton h-16" /><div className="skeleton h-16" /><div className="skeleton h-16" /></div> : c === null ?
         <div className="rounded-2xl bg-rose-50 p-6 text-rose-800">The assessment API is unreachable right now.</div> : (
         <div className="overflow-hidden rounded-2xl border bg-white shadow-sm">
           {rows.map(([name, ok, note]) => (

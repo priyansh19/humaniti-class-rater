@@ -39,7 +39,7 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
         <span className="font-mono text-xs text-slate-400">job {id}</span>
       </div>
       {error && <Alert tone="error">{error}</Alert>}
-      {!job && !error && <div className="h-40 animate-pulse rounded-2xl bg-slate-200/60" />}
+      {!job && !error && <div className="skeleton h-40" />}
       {job && (job.status === "queued" || job.status === "running") && <JobProgress job={job} />}
       {job?.status === "failed" && (
         <Alert tone="error"><div className="space-y-3"><p><b>The assessment failed.</b> {job.message}</p><Link href="/"><Button variant="outline" size="sm">Try again</Button></Link></div></Alert>

@@ -23,8 +23,8 @@ export default function HistoryPage() {
       {items.length === 0 ? <div className="rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 p-10 text-center text-sm text-amber-800">No runs yet. Assess a class in Advanced mode and it will appear here.</div> : (
         <ul className="grid gap-2 sm:grid-cols-2">
           {items.map((i) => (
-            <li key={i.id}><button onClick={() => setOpen(open === i.id ? null : i.id)} className="flex w-full items-center justify-between rounded-xl border bg-white px-4 py-3 text-left shadow-sm hover:ring-2 hover:ring-pink-300">
-              <span><span className="block font-medium">{i.name}</span><span className="text-xs text-slate-500">{new Date(i.at).toLocaleString()}</span></span>
+            <li key={i.id}><button onClick={() => setOpen(open === i.id ? null : i.id)} className="tap lift flex w-full items-center justify-between gap-2 rounded-xl border bg-white px-4 py-3 text-left shadow-sm hover:ring-2 hover:ring-pink-300">
+              <span className="min-w-0"><span className="block truncate font-medium">{i.name}</span><span className="text-xs text-slate-500">{new Date(i.at).toLocaleString()}</span></span>
               <span className={`rounded-lg px-2 py-0.5 text-sm font-semibold ${LABEL_STYLE[i.report.label]}`}>{i.report.label}{i.report.custom && i.report.custom.label !== i.report.label ? ` / ${i.report.custom.label}` : ""}</span>
             </button></li>
           ))}

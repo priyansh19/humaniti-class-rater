@@ -12,16 +12,16 @@ export default function Home() {
     <div className="space-y-8">
       <section className="space-y-3 pt-4">
         <span className="inline-block rounded-full bg-gradient-to-r from-violet-600 to-pink-600 px-3 py-1 text-xs font-semibold text-white shadow">8x8 · kids&apos; online chess classes</span>
-        <h1 className="max-w-3xl text-3xl font-extrabold tracking-tight sm:text-5xl">How good was <span className="rainbow-text">this class?</span></h1>
+        <h1 className="max-w-3xl text-[28px] font-extrabold leading-tight tracking-tight sm:text-5xl">How good was <span className="rainbow-text">this class?</span></h1>
         <p className="max-w-2xl text-slate-600">
           Give it a class and get a rating of <b className="text-rose-600">Poor</b>, <b className="text-amber-600">Average</b>, <b className="text-sky-600">Good</b> or <b className="text-emerald-600">Excellent</b>, with specific, evidence-based reasons.
         </p>
       </section>
       <CapabilityBanner />
       <AssessForm />
-      <section className="grid gap-4 sm:grid-cols-3">
+      <section className="stagger grid gap-3 sm:grid-cols-3 sm:gap-4">
         {STEPS.map(([t, d, g]) => (
-          <div key={t} className="overflow-hidden rounded-2xl border border-white bg-white/80 shadow-sm">
+          <div key={t} className="lift overflow-hidden rounded-2xl border border-white bg-white/80 shadow-sm">
             <div className={`h-1.5 bg-gradient-to-r ${g}`} />
             <div className="p-4"><div className="font-semibold">{t}</div><p className="mt-1 text-sm text-slate-600">{d}</p></div>
           </div>

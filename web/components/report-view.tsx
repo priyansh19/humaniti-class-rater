@@ -1,5 +1,6 @@
 "use client";
 import { downloadText, toMarkdown } from "@/lib/advanced";
+import { Collapsible, CountUp } from "@/components/ui/motion";
 import { AlertTriangle, FileDown, CheckCircle2, Clock, Download, Lightbulb, MessageSquareQuote, TrendingUp } from "lucide-react";
 import { Alert, Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Progress } from "@/components/ui/primitives";
 import { cn } from "@/lib/cn";
@@ -27,19 +28,19 @@ export function ReportView({ report }: { report: Report }) {
   };
   const isLocal = report.judge === "local";
   return (
-    <div className="space-y-6">
+    <div className="stagger space-y-5 sm:space-y-6">
       <Card>
-        <CardContent className="flex flex-col gap-6 pt-6 md:flex-row md:items-center">
+        <CardContent className="flex flex-col gap-5 pt-5 md:flex-row md:items-center md:gap-6 md:pt-6">
           <div className="flex flex-col items-start gap-2 md:w-64">
             <span className="text-xs font-medium uppercase tracking-wider text-slate-500">Overall rating</span>
-            <span className={cn("rounded-2xl px-5 py-2 text-3xl font-bold ring-1 ring-inset", LABEL_STYLE[report.label])}>{report.label}</span>
+            <span className={cn("pop rounded-2xl px-5 py-2 text-3xl font-bold ring-1 ring-inset", LABEL_STYLE[report.label])}>{report.label}</span>
             <div className="flex w-full gap-1" aria-hidden>
               {LABELS.map((l) => <div key={l} className={cn("h-1.5 flex-1 rounded-full", LABELS.indexOf(l) <= LABELS.indexOf(report.label) ? "bg-brand-600" : "bg-slate-200")} />)}
             </div>
-            <div className="w-full text-xs text-slate-500">Confidence {Math.round(report.confidence * 100)}%<Progress value={report.confidence * 100} className="mt-1 h-1.5" /></div>
+            <div className="w-full text-xs text-slate-500">Confidence <CountUp value={Math.round(report.confidence * 100)} suffix="%" /><Progress value={report.confidence * 100} className="mt-1 h-1.5" /></div>
           </div>
           <div className="flex-1 space-y-3">
-            <p className="text-lg leading-relaxed text-slate-800">{report.summary}</p>
+            <p className="text-base leading-relaxed text-slate-800 sm:text-lg">{report.summary}</p>
             <div className="flex flex-wrap items-center gap-2">
               <Badge className="bg-slate-50 text-slate-700 ring-slate-200">{judgeLabel(report.judge)}</Badge>
               {report.analysis && <Badge className="bg-slate-50 text-slate-700 ring-slate-200"><Clock className="h-3 w-3" />{Math.round(report.analysis.duration_s / 60)} min · transcript: {report.analysis.transcript_source}{report.analysis.roles_estimated ? " (roles estimated)" : ""}</Badge>}
@@ -59,10 +60,10 @@ export function ReportView({ report }: { report: Report }) {
               <div key={k} className="space-y-1.5">
                 <div className="flex items-baseline justify-between gap-2">
                   <div><div className="text-sm font-medium">{CRITERIA[k]?.title ?? k}</div><div className="text-xs text-slate-500">{CRITERIA[k]?.hint}</div></div>
-                  <span className="shrink-0 text-sm font-semibold tabular-nums">{c.score}/5</span>
+                  <span className="shrink-0 text-sm font-semibold tabular-nums"><CountUp value={c.score} />/5</span>
                 </div>
                 <div className="flex gap-1" aria-label={`${c.score} out of 5`}>
-                  {[1, 2, 3, 4, 5].map((i) => <div key={i} className={cn("h-2 flex-1 rounded-full", i <= c.score ? scoreColor(c.score) : "bg-slate-100")} />)}
+                  {[1, 2, 3, 4, 5].map((i) => <div key={i} className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">{i <= c.score && <div className={cn("grow-x h-full rounded-full", scoreColor(c.score))} style={{ animationDelay: `${i * 70}ms` }} />}</div>)}
                 </div>
                 <p className="text-sm text-slate-600">{c.rationale}</p>
               </div>
@@ -85,7 +86,7 @@ export function ReportView({ report }: { report: Report }) {
           <Card>
             <CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-brand-600" />Key metrics</CardTitle></CardHeader>
             <CardContent><dl className="grid grid-cols-2 gap-3">{Object.entries(report.metrics).map(([k, v]) => (
-              <div key={k} className="rounded-xl bg-slate-50 p-3"><dt className="text-xs text-slate-500">{METRIC_NAMES[k] ?? k}</dt><dd className="text-lg font-semibold tabular-nums">{Number.isInteger(v) ? v : v.toFixed(2)}</dd></div>
+              <div key={k} className="lift min-w-0 rounded-xl bg-slate-50 p-3"><dt className="text-xs text-slate-500">{METRIC_NAMES[k] ?? k}</dt><dd className="text-lg font-semibold tabular-nums"><CountUp value={v} decimals={Number.isInteger(v) ? 0 : 2} /></dd></div>
             ))}</dl></CardContent>
           </Card>
         </div>
@@ -93,9 +94,8 @@ export function ReportView({ report }: { report: Report }) {
 
       {report.content?.topics && report.content.topics.length > 0 && <ContentCard content={report.content} />}
 
-      <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><MessageSquareQuote className="h-4 w-4 text-brand-600" />Evidence timeline</CardTitle><CardDescription>Anonymised quotes from the class, linked to the criterion they support.</CardDescription></CardHeader>
-        <CardContent>
+      <Collapsible defaultOpen title={`Evidence timeline (${timeline.length})`} icon={<MessageSquareQuote className="h-4 w-4 text-brand-600" />}>
+        <p className="mb-3 text-sm text-slate-500">Anonymised quotes from the class, linked to the criterion they support.</p>
           {timeline.length === 0 ? <p className="text-sm text-slate-500">No quotes were cited.</p> : (
             <ol className="relative space-y-4 border-l border-slate-200 pl-6">
               {timeline.map((q, i) => (
@@ -111,8 +111,7 @@ export function ReportView({ report }: { report: Report }) {
               ))}
             </ol>
           )}
-        </CardContent>
-      </Card>
+              </Collapsible>
 
       {report.guard_flags && report.guard_flags.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 text-xs"><span className="font-semibold text-slate-600">Input checks:</span>
