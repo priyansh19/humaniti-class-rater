@@ -1,8 +1,8 @@
 """Modal deployment of the worker API.
 
-Deploy (needs `modal token new` or MODAL_TOKEN_ID/MODAL_TOKEN_SECRET, and organiser approval of the host - SPEC Q1):
-    modal secret create rater-secrets RATER_ALLOWED_ORIGINS=https://<web>.vercel.app GEMINI_API_KEY=... RATER_API_KEY=...
-    modal deploy modal_app.py
+Deploy: ../scripts/deploy_worker_modal.sh  (needs MODAL_TOKEN_ID + MODAL_TOKEN_SECRET; SPEC Q1 host approval).
+It creates the `rater-secrets` secret (RATER_ALLOWED_ORIGINS, optional OPENROUTER_API_KEY / model ids), runs
+`modal deploy`, then points the Vercel web project at the worker via NEXT_PUBLIC_WORKER_URL and redeploys.
 """
 import modal
 

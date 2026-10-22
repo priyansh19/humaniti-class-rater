@@ -5,3 +5,4 @@ node_modules/
 api/rater/
 next-env.d.ts
 *.tsbuildinfo
+.vercel
