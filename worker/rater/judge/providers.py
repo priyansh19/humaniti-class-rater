@@ -10,10 +10,14 @@ import re
 
 import httpx
 
-DEFAULTS = {"gemini": "gemini-2.5-flash", "openai": "gpt-4o-mini", "anthropic": "claude-sonnet-4-5", "local": "local"}
+DEFAULTS = {"gemini": "gemini-2.5-flash", "openai": "gpt-4o-mini", "anthropic": "claude-sonnet-4-5", "local": "local",
+            "openrouter": "qwen/qwen-2.5-72b-instruct"}
+OPENROUTER_FALLBACK_DEFAULT = "meta-llama/llama-3.3-70b-instruct"
 # "local" = a fully local OpenAI-compatible server (e.g. llama.cpp `llama-server`); its "key" is the base URL.
-ENV_KEYS = {"gemini": ("GEMINI_API_KEY", "GOOGLE_API_KEY"), "openai": ("OPENAI_API_KEY",), "anthropic": ("ANTHROPIC_API_KEY",),
-            "local": ("RATER_LOCAL_LLM_URL",)}
+ENV_KEYS = {"openrouter": ("OPENROUTER_API_KEY",), "gemini": ("GEMINI_API_KEY", "GOOGLE_API_KEY"), "openai": ("OPENAI_API_KEY",),
+            "anthropic": ("ANTHROPIC_API_KEY",), "local": ("RATER_LOCAL_LLM_URL",)}
+# Auto-detection order. OpenRouter first by owner decision (SPEC Q2: not on the client's approved list - flagged).
+ORDER = ("openrouter", "gemini", "openai", "anthropic", "local")
 
 
 class ProviderError(RuntimeError):
@@ -28,7 +32,7 @@ def detect() -> str | None:
     forced = os.environ.get("RATER_LLM_PROVIDER")
     if forced in ENV_KEYS:
         return forced if _key(forced) else None
-    return next((p for p in ("gemini", "openai", "anthropic", "local") if _key(p)), None)
+    return next((p for p in ORDER if _key(p)), None)
 
 
 def _gemini_schema(s):
@@ -115,6 +119,47 @@ class Anthropic(Provider):
         return block["input"]
 
 
+class OpenRouter(Provider):
+    """Single gateway to many models. Model ids via RATER_OPENROUTER_MODEL / RATER_OPENROUTER_FALLBACK_MODEL."""
+    name = "openrouter"
+
+    def __init__(self, model=None, timeout: float = 180):
+        super().__init__(model or os.environ.get("RATER_OPENROUTER_MODEL"), timeout)
+
+    def complete_json(self, system, user, schema):
+        d = self._post("https://openrouter.ai/api/v1/chat/completions",
+                       {"Authorization": f"Bearer {self.key}", "X-Title": "8x8 class rater"},
+                       {"model": self.model, "temperature": 0, "max_tokens": 4000,
+                        "response_format": {"type": "json_schema", "json_schema": {"name": "assessment", "strict": True,
+                                                                                   "schema": _strip_bounds(schema)}},
+                        "provider": {"require_parameters": True, "data_collection": "deny"},
+                        "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]})
+        if "choices" not in d:
+            raise ProviderError("openrouter returned no choices")
+        return _parse_json(d["choices"][0]["message"]["content"])
+
+
+def chain() -> list[Provider]:
+    """Ordered judges to try: OpenRouter primary -> OpenRouter secondary -> (direct/local providers if configured)."""
+    out: list[Provider] = []
+    forced = os.environ.get("RATER_LLM_PROVIDER")
+    if forced == "local-only":
+        return out
+    names = [forced] if forced in ENV_KEYS else [p for p in ORDER if _key(p)]
+    for n in names:
+        try:
+            if n == "openrouter":
+                out.append(OpenRouter())
+                fb = os.environ.get("RATER_OPENROUTER_FALLBACK_MODEL", OPENROUTER_FALLBACK_DEFAULT)
+                if fb and fb != out[-1].model:
+                    out.append(OpenRouter(fb))
+            else:
+                out.append(REGISTRY[n]())
+        except ProviderError:
+            continue
+    return out
+
+
 class Local(Provider):
     """Fully local LLM behind an OpenAI-compatible API (llama.cpp server). Nothing leaves the host."""
     name = "local"
@@ -131,7 +176,7 @@ class Local(Provider):
         return _parse_json(d["choices"][0]["message"]["content"])
 
 
-REGISTRY = {"gemini": Gemini, "openai": OpenAI, "anthropic": Anthropic, "local": Local}
+REGISTRY = {"openrouter": OpenRouter, "gemini": Gemini, "openai": OpenAI, "anthropic": Anthropic, "local": Local}
 
 
 def get(name: str | None = None) -> Provider | None:

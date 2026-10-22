@@ -12,3 +12,8 @@
 - **Failure analysis:** for each misclassified class, which criteria disagree with its feedback note.
 - **Output:** `docs/EVAL.md`, using anonymised ids (folder plus batch code). No names.
 - **Honesty:** with n=10, one class is worth 10 percentage points. Report the numbers as indicative, together with every variant tried.
+
+## Added: model comparison and content coverage
+- `eval.llm_eval --tag <model>` runs a zero-shot judge per model (nothing is fitted, so there is no fold leakage). `--repeat N` measures consistency. `eval.compare` scores every tag on the six quality metrics, plus fallbacks and latency, and writes `docs/EVAL_MODELS.md`. Families: open-source (Qwen, Llama, DeepSeek) for development, frontier (GPT, Gemini, Claude via OpenRouter) for final numbers.
+- `eval.content_eval` checks (a) agreement with the three content remarks in feedbacks.pdf (`gold.json["_content"]`), and (b) consistency between the VTT and Whisper content maps: subject, top topic, topic-set Jaccard (topics of 1 min or more), and minutes rank correlation.
+- Exploratory variant "full + content coverage" is reported separately from the pre-registered variants.

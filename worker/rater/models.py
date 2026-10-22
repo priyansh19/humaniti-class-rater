@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 Label = Literal["Poor", "Average", "Good", "Excellent"]
 LABELS: list[str] = ["Poor", "Average", "Good", "Excellent"]
 CriterionKey = Literal["rapport", "individual_attention", "energy", "homework_closure",
-                       "presentation", "av_quality", "teaching_aids"]
+                       "presentation", "av_quality", "teaching_aids", "content_coverage"]
 
 
 class Utterance(BaseModel):
@@ -32,6 +32,7 @@ class Analysis(BaseModel):
     features: dict[str, dict[str, float]] = Field(default_factory=dict)   # {"text": {...}, "audio": {...}, "visual": {...}}
     evidence: dict[str, list[Quote]] = Field(default_factory=dict)
     excerpt: str = ""
+    content: dict = Field(default_factory=dict)       # subject, topics[], metrics (rater/content.py)
     warnings: list[str] = Field(default_factory=list)
 
 
@@ -50,4 +51,5 @@ class Report(BaseModel):
     improvements: list[str]
     metrics: dict[str, float] = Field(default_factory=dict)
     judge: str
+    content: dict = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)

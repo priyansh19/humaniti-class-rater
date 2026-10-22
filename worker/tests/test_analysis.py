@@ -7,14 +7,14 @@ from rater.media import MediaError, probe
 
 def test_transcript_only(vtt_text):
     a = analyse(transcript_text=vtt_text)
-    assert a.transcript_source == "vtt" and set(a.features) == {"text"}
+    assert a.transcript_source == "vtt" and set(a.features) == {"text", "content"}
     assert not any(n in a.model_dump_json() for n in NAMES)
 
 
 def test_full_media_with_transcript(synthetic_mp4, vtt_text):
     stages = []
     a = analyse(synthetic_mp4, vtt_text, frame_every_s=5, on_progress=lambda s, p: stages.append(s))
-    assert set(a.features) == {"text", "audio", "visual"}
+    assert set(a.features) == {"text", "content", "audio", "visual"}
     assert a.features["visual"]["frames"] >= 5
     assert {"probing", "audio", "frames"} <= set(stages)
     assert probe(synthetic_mp4)["duration_s"] == pytest.approx(30, abs=1)

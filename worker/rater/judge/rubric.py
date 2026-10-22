@@ -22,7 +22,12 @@ CRITERIA: dict[str, dict] = {
                    "feedback": "Students should not have to report audio/video problems repeatedly."},
     "teaching_aids": {"title": "Teaching aids", "modality": "text",
                       "feedback": "Use boards, puzzles or topic videos to make the lesson concrete."},
+    # Added (brief: "These are for you to explore"): not a theme of the organiser's feedback, so it is excluded
+    # from the pre-registered label model (FROZEN_KEYS) and evaluated separately.
+    "content_coverage": {"title": "Lesson content coverage", "modality": "text",
+                         "feedback": "Topics are introduced, explained, practised with the children and recapped."},
 }
+FROZEN_KEYS = ["rapport", "individual_attention", "energy", "homework_closure", "presentation", "av_quality", "teaching_aids"]
 
 
 @dataclass(frozen=True)
@@ -47,6 +52,9 @@ MAPPINGS: dict[str, list[Comp]] = {
     "av_quality": [Comp("text.av_complaints_per_100_student_turns", 0.5, 4, 2, invert=True),
                    Comp("audio.silence_frac", 0.15, 0.5, 1, invert=True), Comp("audio.clip_frac", 0.0, 0.01, 0.5, invert=True)],
     "teaching_aids": [Comp("text.activity_cues_per_hour", 2, 30), Comp("visual.screen_share_frac", 0.0, 0.4)],
+    "content_coverage": [Comp("content.mean_depth", 0.5, 2.5, 2), Comp("content.explained_frac", 0.2, 1.0),
+                         Comp("content.practised_frac", 0.2, 1.0), Comp("content.recapped_frac", 0.0, 0.8),
+                         Comp("content.topics_detected", 1, 4, 0.5)],
 }
 
 

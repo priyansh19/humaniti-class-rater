@@ -27,15 +27,18 @@ def main():
             continue
         out = os.path.join(CACHE, f"{it['id']}{'.asr' if a.asr else ''}.json")
         if os.path.exists(out):
-            continue
+            with open(out) as fh:
+                if '"utterances"' in fh.read():
+                    continue
         t = time.time()
         vtt = None
         if not a.asr:
             with open(it["vtt"], encoding="utf-8") as fh:
                 vtt = fh.read()
-        an = analyse(it["video"], vtt)
+        an, utts = analyse(it["video"], vtt, return_utterances=True)
         with open(out, "w") as fh:
-            json.dump({"id": it["id"], "folder": it["folder"], "label": it["label"], "analysis": an.model_dump()}, fh)
+            json.dump({"id": it["id"], "folder": it["folder"], "label": it["label"], "analysis": an.model_dump(),
+                       "utterances": [u.model_dump() for u in utts]}, fh)   # anonymised; data/ is git-ignored
         print(f"{it['id']} {'asr' if a.asr else 'vtt'} {time.time() - t:.0f}s", flush=True)
 
 

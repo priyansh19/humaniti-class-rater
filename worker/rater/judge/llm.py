@@ -29,7 +29,7 @@ _CRIT_SCHEMA = {"type": "object", "additionalProperties": False, "required": ["s
                                "timestamps": {"type": "array", "items": {"type": "string"}}}}
 SCHEMA = {
     "type": "object", "additionalProperties": False,
-    "required": ["label", "confidence", "summary", "criteria", "strengths", "improvements"],
+    "required": ["label", "confidence", "summary", "criteria", "strengths", "improvements", "content"],
     "properties": {
         "label": {"type": "string", "enum": LABELS},
         "confidence": {"type": "number"},
@@ -38,6 +38,14 @@ SCHEMA = {
                      "properties": {k: _CRIT_SCHEMA for k in CRITERIA}},
         "strengths": {"type": "array", "items": {"type": "string"}},
         "improvements": {"type": "array", "items": {"type": "string"}},
+        "content": {"type": "object", "additionalProperties": False, "required": ["subject", "topics"],
+                    "properties": {"subject": {"type": "string"},
+                                   "topics": {"type": "array", "items": {
+                                       "type": "object", "additionalProperties": False,
+                                       "required": ["topic", "introduced_at", "explained", "practised", "recapped", "depth"],
+                                       "properties": {"topic": {"type": "string"}, "introduced_at": {"type": "string"},
+                                                      "explained": {"type": "boolean"}, "practised": {"type": "boolean"},
+                                                      "recapped": {"type": "boolean"}, "depth": {"type": "integer"}}}}}},
     },
 }
 
@@ -56,6 +64,8 @@ def build_payload(a: Analysis) -> str:
             f"{' (speaker roles estimated)' if a.roles_estimated else ''}.\n\n"
             f"MEASURED FEATURES (computed locally)\n{json.dumps(a.features, indent=1)}\n\n"
             f"LOCAL HEURISTIC CRITERION SCORES (1-5, for reference only)\n{json.dumps(local)}\n\n"
+            f"LESSON CONTENT MAP (local keyword analysis; refine it: subject, topics, introduced/explained/practised/recapped, depth 0-3)\n"
+            f"{json.dumps({'subject': a.content.get('subject'), 'topics': [{k: t[k] for k in ('topic', 'first_t', 'minutes', 'explained', 'practised_turns', 'recapped', 'depth')} for t in a.content.get('topics', [])]})}\n\n"
             f"TAGGED QUOTES\n" + "\n".join(ev) + f"\n\nTRANSCRIPT EXCERPTS\n{a.excerpt}\n\n"
             "If a modality is missing (e.g. no visual features), score that criterion 3 and say it was not assessed.")
     return _PHONE.sub("[phone]", _EMAIL.sub("[email]", text))
@@ -83,11 +93,18 @@ def to_report(a: Analysis, d: dict, judge_name: str) -> Report:
         stamps = [s for s in c.get("timestamps", []) if s.strip("[] ") in known_ts]
         dropped += len(c.get("timestamps", [])) - len(stamps)
         criteria[k] = CriterionResult(score=int(min(max(int(c["score"]), 1), 5)), rationale=c["rationale"], evidence=_quotes_for(a, stamps))
+    content = dict(a.content)
+    lt = d.get("content", {}) or {}
+    if lt.get("topics"):
+        valid = [t for t in lt["topics"] if str(t.get("introduced_at", "")).strip("[] ") in known_ts]
+        content = {**content, "llm_subject": lt.get("subject"), "llm_topics": valid}
+        if len(valid) < len(lt["topics"]):
+            dropped += len(lt["topics"]) - len(valid)
     warnings = list(a.warnings)
     if dropped:
         warnings.append(f"{dropped} cited timestamp(s) not found in the evidence were removed.")
     t = a.features.get("text", {})
-    return Report(label=d["label"], confidence=float(min(max(d.get("confidence", 0.5), 0), 1)), summary=d["summary"],
+    return Report(content=content, label=d["label"], confidence=float(min(max(d.get("confidence", 0.5), 0), 1)), summary=d["summary"],
                   criteria=criteria, strengths=d["strengths"][:5], improvements=d["improvements"][:5],
                   metrics={k: t[k] for k in ("student_turns_per_min", "students_speaking", "tutor_questions_per_min") if k in t}
                   | {"duration_min": round(a.duration_s / 60, 1)}, judge=judge_name, warnings=warnings)

@@ -10,6 +10,7 @@ export const CRITERIA: Record<string, { title: string; hint: string }> = {
   presentation: { title: "Camera, face, background & light", hint: "Camera on, face visible, 8x8 background, good lighting" },
   av_quality: { title: "Audio/video quality", hint: "No repeated 'can't hear / can't see' complaints" },
   teaching_aids: { title: "Teaching aids", hint: "Board, puzzles, topic videos" },
+  content_coverage: { title: "Lesson content", hint: "Topics introduced, explained, practised, recapped" },
 };
 
 export const STAGES = [
@@ -51,6 +52,6 @@ export function scoreColor(score: number): string {
 export function judgeLabel(judge: string): string {
   if (judge === "local") return "Local heuristic scorer";
   const [p, m] = judge.split(":");
-  const names: Record<string, string> = { gemini: "Gemini", openai: "OpenAI", anthropic: "Anthropic", local: "Local LLM" };
+  const names: Record<string, string> = { gemini: "Gemini", openrouter: "OpenRouter", openai: "OpenAI", anthropic: "Anthropic", local: "Local LLM" };
   return `${names[p] ?? p} LLM judge${m && m !== "local" ? ` (${m})` : ""}`;
 }

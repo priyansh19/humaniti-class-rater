@@ -103,6 +103,44 @@ def scrub(utts: list[Utterance], mapping: dict[str, str]) -> list[Utterance]:
     return [u.model_copy(update={"text": pat.sub(lambda m: tok2label[m.group(1).lower()], u.text)}) for u in utts]
 
 
+_CHESS_WORDS = {"knight", "bishop", "rook", "queen", "king", "pawn", "castle", "castling", "checkmate", "check", "mate", "lichess",
+                "chess", "zoom", "google", "youtube", "whatsapp", "ok", "okay", "sir", "ma'am", "mam", "maam", "teacher", "india",
+                "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "january", "february", "march", "april",
+                "may", "june", "july", "august", "september", "october", "november", "december", "english", "hindi", "malayalam",
+                "white", "black", "student", "tutor", "sicilian", "italian", "london", "ruy", "lopez", "gambit", "fide", "elo"}
+_CAP = re.compile(r"(?<![\w\[])([A-Z][a-zÀ-ɏ]{2,})(?![\w\]])")
+
+
+def _is_common(word: str) -> bool:
+    w = word.lower()
+    if w in _CHESS_WORDS:
+        return True
+    try:
+        from wordfreq import zipf_frequency
+    except ImportError:          # pragma: no cover - conservative fallback: treat unknown capitalised words as names
+        return False
+    return zipf_frequency(w, "en") >= 4.6
+
+
+def scrub_unknown_names(text: str) -> str:
+    """Redact capitalised tokens that look like personal names but are not speakers (e.g. children addressed by name).
+
+    Mid-sentence capitalised words and sentence-initial vocatives ("Josh, ...") that are not common English or
+    chess vocabulary become [name]. Anonymised labels (Tutor, Student N) are kept."""
+    def repl(m: re.Match) -> str:
+        w = m.group(1)
+        start = m.start(1)
+        before = text[:start].rstrip()
+        sentence_initial = not before or before[-1] in ".?!:\"…"
+        vocative = text[m.end(1):m.end(1) + 1] in (",", "!", "?")
+        if w in ("Tutor", "Student") or _is_common(w):
+            return w
+        if sentence_initial and not vocative:
+            return w
+        return "[name]"
+    return _CAP.sub(repl, text)
+
+
 def from_text(text: str) -> tuple[list[Utterance], str, bool, set[str]]:
     """Parse + roles + anonymise. Returns (utterances, source, roles_estimated, student_name_tokens)."""
     raw, src = parse(text)
@@ -111,12 +149,14 @@ def from_text(text: str) -> tuple[list[Utterance], str, bool, set[str]]:
     for name, label in mapping.items():
         if label != "Tutor":
             student_tokens |= name_tokens(name)
-    return scrub(utts, mapping), src, est, student_tokens
+    utts = scrub(utts, mapping)
+    utts = [u.model_copy(update={"text": scrub_unknown_names(u.text)}) for u in utts]
+    return utts, src, est, student_tokens
 
 
 def from_segments(segments: list[tuple[float, float, str]]) -> list[Utterance]:
     utts, _, _ = assign_roles([(s, e, "", t) for s, e, t in segments])
-    return utts
+    return [u.model_copy(update={"text": scrub_unknown_names(u.text)}) for u in utts]
 
 
 def fmt_ts(t: float) -> str:

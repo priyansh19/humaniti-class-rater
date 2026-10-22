@@ -12,7 +12,7 @@ from fastapi.testclient import TestClient
 def api(tmp_path, monkeypatch):
     monkeypatch.setenv("RATER_DATA_DIR", str(tmp_path))
     monkeypatch.delenv("RATER_API_KEY", raising=False)
-    for k in ["GEMINI_API_KEY", "GOOGLE_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY"]:
+    for k in ["OPENROUTER_API_KEY", "GEMINI_API_KEY", "GOOGLE_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "RATER_LOCAL_LLM_URL"]:
         monkeypatch.delenv(k, raising=False)
     from rater.api import app as appmod
     from rater.api import ingest

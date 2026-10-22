@@ -18,6 +18,18 @@
 - `strengths[]`, `improvements[]` (each actionable, citing a timestamp or a feature)
 - `judge` (provider:model or `local`), and `warnings[]`
 
+## Fallback chain
+`judge(a, "auto")` tries `providers.chain()` in order, giving each model one JSON-repair retry:
+1. OpenRouter primary: `RATER_OPENROUTER_MODEL` (default `qwen/qwen-2.5-72b-instruct`; frontier for final runs, e.g. `openai/gpt-4o-mini`, `google/gemini-2.5-flash`, `anthropic/claude-sonnet-4.5`)
+2. OpenRouter secondary: `RATER_OPENROUTER_FALLBACK_MODEL` (default `meta-llama/llama-3.3-70b-instruct`; empty disables it)
+3. any direct key that is set (Gemini, OpenAI, Anthropic) or `RATER_LOCAL_LLM_URL` (llama.cpp)
+4. the local scorer (always available)
+
+HTTP/auth errors skip straight to the next model. The report records `judge = provider:model`, a "Fell back from ..." warning, and the local scorer's estimate. `RATER_LLM_PROVIDER` forces a single path (`local-only` disables LLMs). OpenRouter calls send `provider.data_collection = "deny"`. See SPEC Q2.
+
+## Content coverage (criterion 8, exploratory)
+`rater/content.py` builds a local keyword map: subject; and per topic the first timestamp, minutes, explained, practised turns, recapped, depth 0-3, and evidence quotes. The map goes into the LLM payload; the LLM returns a refined `content.topics[]`. Topics whose `introduced_at` timestamp is not in the payload are dropped. The local map is the fallback. It is scored as `content_coverage` and is not part of the pre-registered label model (`FROZEN_KEYS`).
+
 ## Providers
 Auto-detected: `GEMINI_API_KEY`/`GOOGLE_API_KEY` → Gemini (`gemini-2.5-flash`, `responseSchema`), `OPENAI_API_KEY` → OpenAI (`json_schema` strict), `ANTHROPIC_API_KEY` → Anthropic (tool-use with an input schema). The provider can be overridden with `RATER_LLM_PROVIDER` and `RATER_LLM_MODEL`.
 The payload holds the anonymised evidence quotes, transcript excerpts (opening, closing and a sample from the middle), numeric features, and the local scorer's per-criterion estimates. **It never contains media, names or raw audio.** Responses are validated against the pydantic schema. One repair retry is allowed, then the judge falls back to local.

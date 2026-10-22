@@ -1,0 +1,278 @@
+{
+ "_about": "Curated from the organiser's feedbacks.pdf. Anonymised (no tutor or student names). Each point = rubric theme + polarity (+ strength, - gap). Themes: rapport, individual_attention, energy, homework_closure, presentation, av_quality.",
+ "excellent-B491": {
+  "label": "Excellent",
+  "points": [
+   {
+    "theme": "individual_attention",
+    "polarity": "+",
+    "text": "good one-to-one interaction"
+   },
+   {
+    "theme": "individual_attention",
+    "polarity": "+",
+    "text": "asks questions by calling children individually"
+   },
+   {
+    "theme": "presentation",
+    "polarity": "+",
+    "text": "8x8 background kept"
+   },
+   {
+    "theme": "homework_closure",
+    "polarity": "+",
+    "text": "homework shared"
+   }
+  ]
+ },
+ "excellent-B472": {
+  "label": "Excellent",
+  "points": [
+   {
+    "theme": "rapport",
+    "polarity": "+",
+    "text": "good rapport building"
+   },
+   {
+    "theme": "individual_attention",
+    "polarity": "+",
+    "text": "considers everyone in the class"
+   },
+   {
+    "theme": "individual_attention",
+    "polarity": "+",
+    "text": "asks questions individually"
+   },
+   {
+    "theme": "homework_closure",
+    "polarity": "+",
+    "text": "homework given"
+   }
+  ]
+ },
+ "good-B552": {
+  "label": "Good",
+  "points": [
+   {
+    "theme": "rapport",
+    "polarity": "+",
+    "text": "good intro and introduction"
+   },
+   {
+    "theme": "presentation",
+    "polarity": "+",
+    "text": "fixed 8x8 background"
+   },
+   {
+    "theme": "homework_closure",
+    "polarity": "+",
+    "text": "homework given"
+   },
+   {
+    "theme": "energy",
+    "polarity": "-",
+    "text": "needs more pleasant interaction"
+   }
+  ]
+ },
+ "good-B435": {
+  "label": "Good",
+  "points": [
+   {
+    "theme": "rapport",
+    "polarity": "+",
+    "text": "good introduction"
+   },
+   {
+    "theme": "individual_attention",
+    "polarity": "+",
+    "text": "considers everyone; questions each child individually"
+   },
+   {
+    "theme": "homework_closure",
+    "polarity": "-",
+    "text": "should give homework"
+   }
+  ]
+ },
+ "average-B516": {
+  "label": "Average",
+  "points": [
+   {
+    "theme": "presentation",
+    "polarity": "+",
+    "text": "8x8 background kept"
+   },
+   {
+    "theme": "individual_attention",
+    "polarity": "+",
+    "text": "considers each child individually, at the start and during puzzles"
+   },
+   {
+    "theme": "homework_closure",
+    "polarity": "+",
+    "text": "homework given"
+   },
+   {
+    "theme": "presentation",
+    "polarity": "-",
+    "text": "clarity issues while keeping the background"
+   }
+  ]
+ },
+ "average-B435": {
+  "label": "Average",
+  "points": [
+   {
+    "theme": "presentation",
+    "polarity": "+",
+    "text": "background kept"
+   },
+   {
+    "theme": "individual_attention",
+    "polarity": "+",
+    "text": "one-to-one consideration; individual questions"
+   },
+   {
+    "theme": "energy",
+    "polarity": "-",
+    "text": "needs more energetic communication and pleasant interaction"
+   },
+   {
+    "theme": "homework_closure",
+    "polarity": "-",
+    "text": "should give homework"
+   },
+   {
+    "theme": "presentation",
+    "polarity": "-",
+    "text": "should sit where there is light"
+   }
+  ]
+ },
+ "weak-B558": {
+  "label": "Poor",
+  "points": [
+   {
+    "theme": "presentation",
+    "polarity": "+",
+    "text": "background kept"
+   },
+   {
+    "theme": "rapport",
+    "polarity": "-",
+    "text": "needs a better intro"
+   },
+   {
+    "theme": "homework_closure",
+    "polarity": "-",
+    "text": "needs a better conclusion"
+   },
+   {
+    "theme": "rapport",
+    "polarity": "-",
+    "text": "no time for new joiners to introduce themselves"
+   },
+   {
+    "theme": "energy",
+    "polarity": "-",
+    "text": "needs more energetic and pleasant interaction"
+   }
+  ]
+ },
+ "weak-B482": {
+  "label": "Poor",
+  "points": [
+   {
+    "theme": "presentation",
+    "polarity": "+",
+    "text": "background kept"
+   },
+   {
+    "theme": "individual_attention",
+    "polarity": "+",
+    "text": "asks questions individually"
+   },
+   {
+    "theme": "rapport",
+    "polarity": "-",
+    "text": "goes straight into revision without rapport building"
+   },
+   {
+    "theme": "rapport",
+    "polarity": "-",
+    "text": "no time for new joiners to introduce themselves"
+   },
+   {
+    "theme": "presentation",
+    "polarity": "-",
+    "text": "tutor camera sometimes off while teaching"
+   }
+  ]
+ },
+ "quality_issue-B392": {
+  "label": "Poor",
+  "points": [
+   {
+    "theme": "individual_attention",
+    "polarity": "+",
+    "text": "interaction present"
+   },
+   {
+    "theme": "presentation",
+    "polarity": "-",
+    "text": "no background"
+   },
+   {
+    "theme": "energy",
+    "polarity": "-",
+    "text": "needs happier interaction with the kids"
+   },
+   {
+    "theme": "av_quality",
+    "polarity": "-",
+    "text": "students reported quality issues several times"
+   }
+  ]
+ },
+ "quality_issue-B441": {
+  "label": "Poor",
+  "points": [
+   {
+    "theme": "presentation",
+    "polarity": "+",
+    "text": "background kept"
+   },
+   {
+    "theme": "presentation",
+    "polarity": "-",
+    "text": "tutor's face cannot be seen"
+   },
+   {
+    "theme": "rapport",
+    "polarity": "-",
+    "text": "enters the class directly without rapport building"
+   },
+   {
+    "theme": "energy",
+    "polarity": "-",
+    "text": "needs happier communication"
+   }
+  ]
+ },
+ "_content_about": "Content remarks in feedbacks.pdf (only three): one class 'can play topic related videos' (teaching-aid gap), one class practises via puzzle solving, one class goes 'directly to revision of previous class'. Checked by eval/content_eval.py.",
+ "_content": {
+  "excellent-B491": {
+   "check": "teaching_aids_gap",
+   "note": "reviewer suggests topic-related videos"
+  },
+  "average-B516": {
+   "check": "practice_present",
+   "note": "students solve puzzles in class"
+  },
+  "weak-B482": {
+   "check": "opens_with_revision",
+   "note": "opens straight with revision of the previous class"
+  }
+ }
+}

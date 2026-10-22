@@ -16,7 +16,7 @@ from collections import Counter
 import numpy as np
 
 from rater.judge.ordinal import fit
-from rater.judge.rubric import CRITERIA, criterion_scores
+from rater.judge.rubric import CRITERIA, FROZEN_KEYS, criterion_scores
 from rater.judge.selection import flat, select
 from rater.models import LABELS, Analysis
 
@@ -44,6 +44,8 @@ VARIANTS = {
     "transcript + audio": ("vtt", ("text", "audio")),
     "transcript + audio + frames (full)": ("vtt", ("text", "audio", "visual")),
     "full, ASR transcript (no VTT)": ("asr", ("text", "audio", "visual")),
+    # exploratory, added after the pre-registered runs: content coverage as an 8th criterion
+    "full + content coverage (exploratory)": ("vtt", ("text", "audio", "visual", "content")),
 }
 
 
@@ -61,12 +63,17 @@ def load(kind: str) -> list[dict]:
 
 
 def crit_rows(rows, modalities):
-    return [criterion_scores({m: r["analysis"].features[m] for m in modalities if m in r["analysis"].features}) for r in rows]
+    keys = FROZEN_KEYS + (["content_coverage"] if "content" in modalities else [])
+    out = []
+    for r in rows:
+        c = criterion_scores({m: r["analysis"].features[m] for m in modalities if m in r["analysis"].features})
+        out.append({k: c.get(k) for k in keys})
+    return out
 
 
 def loo_ridge(X, y):
     preds, scores = [], []
-    keys = list(CRITERIA)
+    keys = list(X[0])
     for i in range(len(X)):
         m = fit([x for j, x in enumerate(X) if j != i], [t for j, t in enumerate(y) if j != i], keys)
         lab, s, _ = m.predict(X[i])
@@ -143,7 +150,7 @@ def main():
             results[f"LLM judge ({detect()}, zero-shot, full features)"] = metrics([r["label"] for r in rows], p)
     # shipped model: fit on all 10 labelled classes, full VTT features
     rows = [r for r in load("vtt") if r["label"]]
-    full = fit(crit_rows(rows, ("text", "audio", "visual")), [r["label"] for r in rows], list(CRITERIA))
+    full = fit(crit_rows(rows, ("text", "audio", "visual")), [r["label"] for r in rows], FROZEN_KEYS)
     with open(MODEL_OUT, "w") as fh:
         fh.write(full.to_json())
     write_report(results, per_class, full)
