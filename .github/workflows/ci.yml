@@ -16,7 +16,7 @@ jobs:
       - run: pytest -q --cov=rater --cov-report=term-missing
       - name: Eval summary (committed results; recordings are never in CI)
         run: |
-          for f in eval/results/*.json; do echo "## $f" >> "$GITHUB_STEP_SUMMARY"; echo '```json' >> "$GITHUB_STEP_SUMMARY"; head -c 4000 "$f" >> "$GITHUB_STEP_SUMMARY"; echo '```' >> "$GITHUB_STEP_SUMMARY"; done
+          shopt -s nullglob; for f in eval/results/*.json; do echo "## $f" >> "$GITHUB_STEP_SUMMARY"; echo '```json' >> "$GITHUB_STEP_SUMMARY"; head -c 4000 "$f" >> "$GITHUB_STEP_SUMMARY"; echo '```' >> "$GITHUB_STEP_SUMMARY"; done
           [ -f ../docs/EVAL.md ] && cat ../docs/EVAL.md >> "$GITHUB_STEP_SUMMARY" || true
       - run: python -c "import modal_app" || true
   web:
