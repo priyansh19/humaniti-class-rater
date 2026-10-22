@@ -18,3 +18,5 @@ tmp/
 logs/
 share_url.txt
 .gradio/
+worker/data/
+*.npz
