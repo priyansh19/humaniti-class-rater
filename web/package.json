@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "vercel-build": "bash scripts/sync-rater.sh && next build"
   },
   "dependencies": {
     "class-variance-authority": "0.7.1",
