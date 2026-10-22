@@ -33,6 +33,7 @@ class Analysis(BaseModel):
     evidence: dict[str, list[Quote]] = Field(default_factory=dict)
     excerpt: str = ""
     content: dict = Field(default_factory=dict)       # subject, topics[], metrics (rater/content.py)
+    evidence_windows: dict = Field(default_factory=dict)   # criterion -> top embedding-retrieved windows (rater/embeddings.py)
     warnings: list[str] = Field(default_factory=list)
 
 

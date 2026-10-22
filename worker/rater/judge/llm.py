@@ -64,7 +64,10 @@ def build_payload(a: Analysis) -> str:
             f"{' (speaker roles estimated)' if a.roles_estimated else ''}.\n\n"
             f"MEASURED FEATURES (computed locally)\n{json.dumps(a.features, indent=1)}\n\n"
             f"LOCAL HEURISTIC CRITERION SCORES (1-5, for reference only)\n{json.dumps(local)}\n\n"
-            f"LESSON CONTENT MAP (local keyword analysis; refine it: subject, topics, introduced/explained/practised/recapped, depth 0-3)\n"
+            + (("EVIDENCE WINDOWS (local multimodal embedding retrieval; window range, best modality, similarity, anonymised text)\n"
+                + "\n".join(f"{c}: " + "; ".join(f"[{fmt_ts(w['t0'])}-{fmt_ts(w['t1'])}] {w['modality']} {w['score']:.2f} \"{w.get('text', '')[:300]}\""
+                                                 for w in ws) for c, ws in a.evidence_windows.items()) + "\n\n") if a.evidence_windows else "")
+            + f"LESSON CONTENT MAP (local keyword analysis; refine it: subject, topics, introduced/explained/practised/recapped, depth 0-3)\n"
             f"{json.dumps({'subject': a.content.get('subject'), 'topics': [{k: t[k] for k in ('topic', 'first_t', 'minutes', 'explained', 'practised_turns', 'recapped', 'depth')} for t in a.content.get('topics', [])]})}\n\n"
             f"TAGGED QUOTES\n" + "\n".join(ev) + f"\n\nTRANSCRIPT EXCERPTS\n{a.excerpt}\n\n"
             "If a modality is missing (e.g. no visual features), score that criterion 3 and say it was not assessed.")

@@ -1,0 +1,7 @@
+# Optional: local multimodal embeddings (EmbeddingGemma 2). CPU wheels:
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+sentence-transformers>=6.2
+transformers>=5.20
+pillow
+soundfile
+torchcodec

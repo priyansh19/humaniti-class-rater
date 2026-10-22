@@ -36,6 +36,9 @@ flowchart LR
   A -- job status + report JSON --> W
 ```
 
+### Embeddings service (added)
+EmbeddingGemma 2, run locally on CPU only, embeds about 5-min windows of audio, frames and transcript text. It is used for evidence-window retrieval, zero-shot rubric probes and semantic content coverage. See [docs/specs/embeddings.md](docs/specs/embeddings.md). It is optional (`RATER_EMBEDDINGS=1`) and adopted only if the nested-LOO ablation shows a gain (A12).
+
 ## 3. Assumptions (each one cites the brief or the organiser's email that permits it)
 | # | Assumption / choice | Permitted by |
 |---|---|---|
@@ -49,14 +52,14 @@ flowchart LR
 | A8 | The rubric criteria come from the organiser's `feedbacks.pdf` and nothing else | Brief: "These are for you to explore. We are not prescribing what to examine or how to build the solution." |
 | A9 | A Zoom VTT transcript can optionally be supplied with the recording (it skips ASR and adds speaker labels) | Brief: "Choose any appropriate AI tools…". Accepting the recording stays mandatory (R1), and a VTT is never required |
 | A10 | Recordings, transcripts, frames and names are never committed. The repo is public | Brief R9: "Do not publish, redistribute, or expose them through public applications or repositories." |
+| A11 | Domain content coverage (subject, topics, introduced/explained/practised/recapped, minutes, depth) is an extra, explicitly exploratory criterion. It is kept out of the pre-registered label model | Brief: "These are for you to explore"; owner request. Only 3 content remarks exist in feedbacks.pdf, so it is evaluated mainly for VTT/Whisper consistency |
+| A12 | A local open-weights multimodal embedding model (EmbeddingGemma 2) may be used. It runs fully locally, so no recording leaves the machine | Brief: "any tools/models/APIs"; organiser email: "fully local is also fine" |
 
 **Out of scope, because the brief does not ask for them:** user accounts and auth, persistent history of past assessments, batch processing, languages beyond what the models handle by default, and any label other than the four.
 
 ## 4. Open questions
 - **Q2: OpenRouter vs the approved list. Unresolved, flagged.** The owner (Priyansh) has no Gemini key and directed that OpenRouter (`OPENROUTER_API_KEY`) be the single gateway for all models, with the primary model, then a secondary model, then the local scorer. The organiser's email says OpenRouter is NOT approved (A4, R9). Routing OpenAI, Gemini or Anthropic models *through* OpenRouter still sends the anonymised payload to OpenRouter. Implementation: OpenRouter is supported and auto-detected first, with `provider.data_collection = "deny"`. Direct OpenAI, Gemini and Anthropic keys and a fully local model (llama.cpp) remain available. `RATER_LLM_PROVIDER` forces one path, for example `openai` or `local`. **Before submission, either the organiser approves OpenRouter or the deployed config uses a direct approved key or the local model.**
 - **Q1: hosting the worker.** Any hosted worker (Modal, Render, Railway) processes uploaded recordings on that provider's infrastructure. The organiser has approved *LLM services* (A4) but not a compute or storage host. Under R9 ("Process recordings only using services specifically permitted by the organiser") **we need the organiser to confirm the host before deploying**. Until then the worker runs locally or self-hosted, and the hosted web UI shows the worker as offline.
-
-| A11 | Domain content coverage (subject, topics, introduced/explained/practised/recapped, minutes, depth) is an extra, explicitly exploratory criterion. It is kept out of the pre-registered label model | Brief: "These are for you to explore"; owner request. Only 3 content remarks exist in feedbacks.pdf, so it is evaluated mainly for VTT/Whisper consistency |
 
 ## 5. Acceptance criteria
 - AC1: An MP4 upload (up to about 90 minutes, 2 GB) or a link produces a label and a report. The job survives the client polling and does not depend on a single long HTTP request.
