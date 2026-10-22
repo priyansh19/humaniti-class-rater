@@ -49,6 +49,15 @@ def rationale(key: str, a: Analysis) -> str:
         if au:
             s += f"; {100 * au.get('silence_frac', 0):.0f}% of the recording is silent"
         return s + "."
+    if key == "content_coverage":
+        c = a.content or {}
+        tops = c.get("topics", [])
+        if not tops:
+            return "No clear lesson topics were detected in the transcript."
+        main = ", ".join(f"{t['topic']} ({t['minutes']:.0f} min, depth {t['depth']}/3)" for t in tops[:3])
+        m = c.get("metrics", {})
+        return (f"Subject: {c.get('subject', 'unknown')}. Main topics: {main}. {100 * m.get('explained_frac', 0):.0f}% of topics explained, "
+                f"{100 * m.get('practised_frac', 0):.0f}% practised with students, {100 * m.get('recapped_frac', 0):.0f}% recapped.")
     if key == "teaching_aids":
         s = f"{t.get('activity_cues_per_hour', 0):.0f} references to boards/puzzles/activities per hour"
         if v:
@@ -65,6 +74,7 @@ IMPROVE = {
     "presentation": "Keep the camera on with your face visible against the 8x8 background, and sit facing a light source.",
     "av_quality": "Check the microphone and network before class; respond quickly when children report they can't hear or see.",
     "teaching_aids": "Use the board, puzzles or short topic videos to make concepts concrete.",
+    "content_coverage": "For each topic: explain the idea, have every child practise it on a position, then recap it at the end.",
 }
 
 
@@ -82,7 +92,7 @@ def build_report(a: Analysis, model: OrdinalModel | None = None) -> Report:
         from ..models import LABELS
         label, conf = LABELS[int(min(max(round(s), 0), 3))], 0.4
     else:
-        label, s, conf = model.predict(crit)
+        label, s, conf = model.predict({k: v for k, v in crit.items() if k in model.keys})
     criteria = {k: CriterionResult(score=round(v), rationale=rationale(k, a), evidence=_ev(a, k))
                 for k, v in crit.items() if v is not None}
     ranked = sorted(criteria.items(), key=lambda kv: crit[kv[0]])
@@ -99,4 +109,4 @@ def build_report(a: Analysis, model: OrdinalModel | None = None) -> Report:
                                  "long_gaps_30s", "homework_cues") if k in t}
     metrics["duration_min"] = round(a.duration_s / 60, 1)
     return Report(label=label, confidence=conf, summary=summary, criteria=criteria, strengths=strengths,
-                  improvements=improvements, metrics=metrics, judge="local", warnings=list(a.warnings))
+                  improvements=improvements, metrics=metrics, judge="local", content=a.content, warnings=list(a.warnings))

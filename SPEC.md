@@ -42,7 +42,7 @@ flowchart LR
 | A1 | Stack: Python worker (FastAPI, ffmpeg, faster-whisper, OpenCV), Next.js frontend, Modal or Docker hosting | Brief: "Choose any appropriate AI tools, models, APIs, frameworks, or coding assistants, subject to the data-handling rules below." |
 | A2 | A Next.js web UI instead of Streamlit or Gradio | Brief: "A simple Streamlit, Gradio, or similar prototype is fine." and "A simple interface is enough." |
 | A3 | No model training on video. Hand-specified rubric features plus an LLM judge | Brief: "You do not need to train your own model or build a production-grade platform." |
-| A4 | The LLM judge uses only the Gemini (preferred), OpenAI or Anthropic cloud APIs, or runs fully locally. OpenRouter is removed | Organiser email (Anupam): "Approved LLM services are the OpenAI, Gemini and Anthropic cloud APIs, and fully local is also fine. OpenRouter is NOT on the approved list." |
+| A4 | The approved LLM paths are the Gemini, OpenAI and Anthropic cloud APIs, or fully local. OpenRouter is implemented by owner decision but not approved; see Q2 | Organiser email (Anupam): "Approved LLM services are the OpenAI, Gemini and Anthropic cloud APIs, and fully local is also fine. OpenRouter is NOT on the approved list." |
 | A5 | Only anonymised transcript text and derived numeric features are sent to the LLM. Video, audio and frames never are | Brief R9: "Process recordings only using services specifically permitted by the organiser, especially if children are identifiable." |
 | A6 | Dataset folders map to labels: excellent→Excellent, good→Good, average→Average, **weak→Poor, quality issue→Poor** | Organiser email (Anupam): "Mapping weak and quality issue to Poor is OK, but explain the choice briefly in EXPLANATION.md." |
 | A7 | The design handles recordings up to about 90 minutes (the dataset ranges from 38 to 89 minutes) | Organiser email (Anupam): "Testers will use upload or link with recordings about as long as the dataset samples." |
@@ -52,8 +52,11 @@ flowchart LR
 
 **Out of scope, because the brief does not ask for them:** user accounts and auth, persistent history of past assessments, batch processing, languages beyond what the models handle by default, and any label other than the four.
 
-## 4. Open question (blocks hosting the worker)
+## 4. Open questions
+- **Q2: OpenRouter vs the approved list. Unresolved, flagged.** The owner (Priyansh) has no Gemini key and directed that OpenRouter (`OPENROUTER_API_KEY`) be the single gateway for all models, with the primary model, then a secondary model, then the local scorer. The organiser's email says OpenRouter is NOT approved (A4, R9). Routing OpenAI, Gemini or Anthropic models *through* OpenRouter still sends the anonymised payload to OpenRouter. Implementation: OpenRouter is supported and auto-detected first, with `provider.data_collection = "deny"`. Direct OpenAI, Gemini and Anthropic keys and a fully local model (llama.cpp) remain available. `RATER_LLM_PROVIDER` forces one path, for example `openai` or `local`. **Before submission, either the organiser approves OpenRouter or the deployed config uses a direct approved key or the local model.**
 - **Q1: hosting the worker.** Any hosted worker (Modal, Render, Railway) processes uploaded recordings on that provider's infrastructure. The organiser has approved *LLM services* (A4) but not a compute or storage host. Under R9 ("Process recordings only using services specifically permitted by the organiser") **we need the organiser to confirm the host before deploying**. Until then the worker runs locally or self-hosted, and the hosted web UI shows the worker as offline.
+
+| A11 | Domain content coverage (subject, topics, introduced/explained/practised/recapped, minutes, depth) is an extra, explicitly exploratory criterion. It is kept out of the pre-registered label model | Brief: "These are for you to explore"; owner request. Only 3 content remarks exist in feedbacks.pdf, so it is evaluated mainly for VTT/Whisper consistency |
 
 ## 5. Acceptance criteria
 - AC1: An MP4 upload (up to about 90 minutes, 2 GB) or a link produces a label and a report. The job survives the client polling and does not depend on a single long HTTP request.

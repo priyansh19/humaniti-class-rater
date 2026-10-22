@@ -89,6 +89,8 @@ export function ReportView({ report }: { report: Report }) {
         </div>
       </div>
 
+      {report.content?.topics && report.content.topics.length > 0 && <ContentCard content={report.content} />}
+
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2"><MessageSquareQuote className="h-4 w-4 text-brand-600" />Evidence timeline</CardTitle><CardDescription>Anonymised quotes from the class, linked to the criterion they support.</CardDescription></CardHeader>
         <CardContent>
@@ -114,5 +116,37 @@ export function ReportView({ report }: { report: Report }) {
         <Alert tone="warn"><div className="flex gap-2"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /><ul className="space-y-1">{report.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul></div></Alert>
       )}
     </div>
+  );
+}
+
+function Stage({ on, label }: { on: boolean; label: string }) {
+  return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${on ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" : "bg-slate-50 text-slate-400 ring-1 ring-slate-200"}`}>{label}</span>;
+}
+
+function ContentCard({ content }: { content: NonNullable<Report["content"]> }) {
+  const topics = content.topics ?? [];
+  const max = Math.max(...topics.map((t) => t.minutes), 1);
+  const subject = content.llm_subject || content.subject || "unknown";
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Lesson content coverage</CardTitle>
+        <CardDescription>Subject: <span className="font-medium capitalize text-slate-700">{subject}</span>. Time per topic and how far each one got. Depth is scored 0–3: mentioned, explained, practised, recapped.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {topics.map((t) => (
+          <div key={t.topic} className="space-y-1.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-sm font-medium capitalize text-slate-800">{t.topic} <span className="font-normal text-slate-400">· from {fmtTs(t.first_t)}</span></span>
+              <div className="flex gap-1.5"><Stage on label="Introduced" /><Stage on={t.explained} label="Explained" /><Stage on={t.practised_turns > 0} label="Practised" /><Stage on={t.recapped} label="Recapped" /></div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-brand-500" style={{ width: `${(100 * t.minutes) / max}%` }} /></div>
+              <span className="w-24 text-right text-xs tabular-nums text-slate-500">{t.minutes.toFixed(1)} min · depth {t.depth}/3</span>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 }
