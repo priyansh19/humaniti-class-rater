@@ -2,16 +2,27 @@
 
 @theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --color-brand-50: #eef2ff;
-  --color-brand-100: #e0e7ff;
-  --color-brand-500: #6366f1;
-  --color-brand-600: #4f46e5;
-  --color-brand-700: #4338ca;
+  --color-brand-50: #f5f3ff;
+  --color-brand-100: #ede9fe;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed;
+  --color-brand-700: #6d28d9;
 }
 
-body { @apply bg-slate-50 text-slate-900 antialiased; }
+body {
+  @apply text-slate-900 antialiased;
+  background:
+    radial-gradient(60rem 30rem at 0% -10%, rgba(236, 72, 153, .16), transparent 60%),
+    radial-gradient(50rem 30rem at 100% 0%, rgba(56, 189, 248, .18), transparent 60%),
+    radial-gradient(40rem 30rem at 50% 110%, rgba(250, 204, 21, .14), transparent 60%),
+    #fbfaff;
+  background-attachment: fixed;
+}
+.rainbow-text { background: linear-gradient(90deg, #7c3aed, #db2777, #f59e0b); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.rainbow-bar { background: linear-gradient(90deg, #8b5cf6, #ec4899, #f59e0b, #10b981, #0ea5e9); }
 .checker {
-  background-image: linear-gradient(45deg, rgba(99,102,241,.06) 25%, transparent 25%), linear-gradient(-45deg, rgba(99,102,241,.06) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, rgba(99,102,241,.06) 75%), linear-gradient(-45deg, transparent 75%, rgba(99,102,241,.06) 75%);
+  background-image: linear-gradient(45deg, rgba(139,92,246,.07) 25%, transparent 25%), linear-gradient(-45deg, rgba(236,72,153,.07) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(139,92,246,.07) 75%), linear-gradient(-45deg, transparent 75%, rgba(236,72,153,.07) 75%);
   background-size: 32px 32px; background-position: 0 0, 0 16px, 16px -16px, -16px 0;
 }
+input[type="range"] { accent-color: #7c3aed; }

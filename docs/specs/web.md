@@ -18,3 +18,12 @@ Next.js (App Router, TypeScript) + Tailwind + shadcn-style components. Deployed 
 - The browser uploads chunks **directly to the worker** (`NEXT_PUBLIC_WORKER_URL`), because Vercel request-body limits rule out proxying video.
 - Transcript-only mode (paste or upload a VTT, or a link) goes to the worker's `/assess/transcript`. When no worker is configured, the web shows an explicit offline state and does not fake results.
 - Polling uses plain fetch.
+
+## v3 pages
+
+- `/`: Brief mode. Includes the capability banner, and the video tabs are disabled when no worker is available.
+- `/advanced`: the config panel, with a brief-vs-custom comparison.
+- `/history`: localStorage history (last 20) with export.
+- `/status`: capabilities and the missing keys.
+- Reports offer JSON and Markdown export and show the guard flags.
+- The theme is a multicolour gradient (violet, pink, amber, sky).
