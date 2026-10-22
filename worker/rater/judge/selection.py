@@ -79,7 +79,7 @@ def _fit_candidate(name: str, rows: list[dict], y: list[str]):
     if name.startswith("ologit:"):
         from .ologit import fit as fit_ol
         _, lam, keys = name.split(":")
-        m = fit_ol(rows, y, [f"crit.{k}" for k in keys.split("+")], lam=float(lam))
+        m = fit_ol(rows, y, [k if "." in k else f"crit.{k}" for k in keys.split("+")], lam=float(lam))
         return OL(m) if m else None
     if name.startswith("ridge:"):
         crit = [{k: r.get(f"crit.{k}") for k in CRITERIA} for r in rows]
@@ -95,6 +95,19 @@ def candidates_v22() -> list[str]:
 
     from .rubric import FROZEN_KEYS
     subs = [(k,) for k in FROZEN_KEYS] + list(combinations(FROZEN_KEYS, 2))
+    return [f"ologit:{lam}:{'+'.join(s)}" for s in subs for lam in LAMS]
+
+
+def candidates_probes(probe_keys: list[str], with_criteria: bool = True) -> list[str]:
+    """Declared before the first embeddings run: v2.2 set, plus ordinal-logit on 1 probe, plus 1 criterion + 1 probe.
+    with_criteria=False gives the probe-only set (1 or 2 probes)."""
+    from itertools import combinations
+
+    from .rubric import FROZEN_KEYS
+    if with_criteria:
+        subs = [(p,) for p in probe_keys] + [(c, p) for c in FROZEN_KEYS for p in probe_keys]
+        return candidates_v22() + [f"ologit:{lam}:{'+'.join(s)}" for s in subs for lam in LAMS]
+    subs = [(p,) for p in probe_keys] + list(combinations(probe_keys, 2))
     return [f"ologit:{lam}:{'+'.join(s)}" for s in subs for lam in LAMS]
 
 
@@ -123,8 +136,11 @@ def inner_score(name: str, rows: list[dict], y: list[str]) -> tuple[float, float
     return hits / len(rows), err / len(rows)
 
 
-def select(rows: list[dict], y: list[str], version: str = "v2.2") -> tuple[str, object, dict]:
-    if version == "v2.1":
+def select(rows: list[dict], y: list[str], version: str = "v2.2", pool: list[str] | None = None) -> tuple[str, object, dict]:
+    if pool is not None:
+        scores = {c: inner_score(c, rows, y) for c in pool}
+        best = max(scores, key=lambda c: (scores[c][0], -scores[c][1], -c.count("+"), float(c.split(":")[1])))
+    elif version == "v2.1":
         scores = {c: inner_score(c, rows, y) for c in candidates(rows)}
         best = max(scores, key=lambda c: (scores[c][0], -scores[c][1], c.startswith("ridge")))
     else:

@@ -49,14 +49,15 @@ def pcm(path: str, rate: int = 16000, start: float | None = None, dur: float | N
     return np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
 
 
-def frames(path: str, every_s: float = 15.0, width: int = 320):
+def frames(path: str, every_s: float = 15.0, width: int = 320, start: float | None = None, dur: float | None = None):
     """Yield (t_seconds, BGR uint8 array) sampled every `every_s` seconds, streamed from ffmpeg (no temp files)."""
     p = probe(path)
     if not p["has_video"]:
         return
     w = width
     h = int(round(p["height"] * w / p["width"] / 2) * 2)
-    cmd = ["ffmpeg", "-v", "error", "-nostdin", "-i", path, "-vf", f"fps=1/{every_s},scale={w}:{h}",
+    seek = (["-ss", f"{start:.2f}"] if start else []) + (["-t", f"{dur:.2f}"] if dur else [])
+    cmd = ["ffmpeg", "-v", "error", "-nostdin", *seek, "-i", path, "-vf", f"fps=1/{every_s},scale={w}:{h}",
            "-f", "rawvideo", "-pix_fmt", "bgr24", "-"]
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     size = w * h * 3
@@ -66,7 +67,7 @@ def frames(path: str, every_s: float = 15.0, width: int = 320):
             buf = proc.stdout.read(size)
             if len(buf) < size:
                 break
-            yield (i + 0.5) * every_s, np.frombuffer(buf, np.uint8).reshape(h, w, 3)
+            yield (start or 0) + (i + 0.5) * every_s, np.frombuffer(buf, np.uint8).reshape(h, w, 3)
             i += 1
     finally:
         proc.stdout.close()

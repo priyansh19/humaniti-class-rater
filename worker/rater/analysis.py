@@ -1,6 +1,7 @@
 """Orchestrates the analysis stages and reports progress (spec: analysis.md)."""
 from __future__ import annotations
 
+import os
 from collections.abc import Callable
 
 from . import audio as audio_mod
@@ -15,7 +16,8 @@ MAX_DURATION_S = 150 * 60
 
 
 def analyse(media_path: str | None = None, transcript_text: str | None = None, *, use_audio: bool = True,
-            use_visual: bool = True, frame_every_s: float = 15.0, on_progress: Progress | None = None, return_utterances: bool = False):
+            use_visual: bool = True, frame_every_s: float = 15.0, on_progress: Progress | None = None, return_utterances: bool = False,
+            use_embeddings: bool | None = None):
     prog = on_progress or (lambda stage, p: None)
     warnings: list[str] = []
     duration = 0.0
@@ -53,10 +55,25 @@ def analyse(media_path: str | None = None, transcript_text: str | None = None, *
         prog("frames", 0.0)
         feats["visual"] = visual.compute(frames(media_path, frame_every_s), utts,
                                          on_frame=lambda i: prog("frames", min((i + 1) / n_expected, 1.0)))
+    windows: dict = {}
+    if use_embeddings is None:
+        use_embeddings = os.environ.get("RATER_EMBEDDINGS", "0") == "1"
+    if use_embeddings:
+        try:
+            from . import embeddings as emb
+            prog("embeddings", 0.0)
+            ws = emb.embed_class(media_path, utts, duration, on_progress=lambda f: prog("embeddings", f))
+            feats["emb"] = emb.probe_features(ws)
+            windows = {c: [{**r, "text": emb.window_text(utts, r["t0"], r["t1"], 600)} for r in rs]
+                       for c, rs in emb.retrieve(ws).items()}
+            content["semantic"] = emb.semantic_content(ws)
+        except ImportError:
+            warnings.append("Embeddings requested but torch/sentence-transformers are not installed; skipped.")
     evidence = ev.collect(utts)
     evidence["content_coverage"] = [Quote(**q) for t in content["topics"] for q in t["evidence"]][:8]
     a = Analysis(duration_s=round(duration, 1), transcript_source=source, roles_estimated=est, features=feats,
-                 evidence=evidence, excerpt=ev.excerpt(utts), content=content, warnings=warnings)
+                 evidence=evidence, excerpt=ev.excerpt(utts), content=content, evidence_windows=windows,
+                 warnings=warnings)
     if return_utterances:
         return a, utts
     return a
