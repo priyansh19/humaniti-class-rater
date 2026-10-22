@@ -1,4 +1,10 @@
-"""Model selection by inner leave-one-out over a GENERIC candidate set (added in v2.1, after the
+"""v2.2 (declared before its first run): candidates are ONLY proportional-odds ordinal logistic models
+on 1 or 2 of the 7 frozen rubric criterion scores, lam in {1, 5}  (7 + 21 subsets x 2 = 56 candidates).
+v2.1's pool of 1-D thresholds on ~60 raw features overfit: inner LOO picked noise features (0% outer).
+Selection = inner LOO exact accuracy, then MAE, then fewer features, then stronger regularisation.
+
+Legacy v2.1 docstring:
+Model selection by inner leave-one-out over a GENERIC candidate set (added in v2.1, after the
 pre-registered ridge model failed; see docs/EVAL.md). Selection only ever sees training rows.
 
 Candidates:
@@ -70,10 +76,34 @@ class Ridge:
 
 
 def _fit_candidate(name: str, rows: list[dict], y: list[str]):
+    if name.startswith("ologit:"):
+        from .ologit import fit as fit_ol
+        _, lam, keys = name.split(":")
+        m = fit_ol(rows, y, [f"crit.{k}" for k in keys.split("+")], lam=float(lam))
+        return OL(m) if m else None
     if name.startswith("ridge:"):
         crit = [{k: r.get(f"crit.{k}") for k in CRITERIA} for r in rows]
         return Ridge(fit_ridge(crit, y, list(CRITERIA), alpha=float(name.split(":")[1])))
     return fit_threshold(rows, y, name)
+
+
+LAMS = (1.0, 5.0)
+
+
+def candidates_v22() -> list[str]:
+    from itertools import combinations
+
+    from .rubric import FROZEN_KEYS
+    subs = [(k,) for k in FROZEN_KEYS] + list(combinations(FROZEN_KEYS, 2))
+    return [f"ologit:{lam}:{'+'.join(s)}" for s in subs for lam in LAMS]
+
+
+@dataclass
+class OL:
+    model: object
+
+    def predict(self, x: dict):
+        return self.model.predict(x)
 
 
 def candidates(rows: list[dict]) -> list[str]:
@@ -93,13 +123,19 @@ def inner_score(name: str, rows: list[dict], y: list[str]) -> tuple[float, float
     return hits / len(rows), err / len(rows)
 
 
-def select(rows: list[dict], y: list[str]) -> tuple[str, object, dict]:
-    scores = {c: inner_score(c, rows, y) for c in candidates(rows)}
-    best = max(scores, key=lambda c: (scores[c][0], -scores[c][1], c.startswith("ridge")))
+def select(rows: list[dict], y: list[str], version: str = "v2.2") -> tuple[str, object, dict]:
+    if version == "v2.1":
+        scores = {c: inner_score(c, rows, y) for c in candidates(rows)}
+        best = max(scores, key=lambda c: (scores[c][0], -scores[c][1], c.startswith("ridge")))
+    else:
+        scores = {c: inner_score(c, rows, y) for c in candidates_v22()}
+        best = max(scores, key=lambda c: (scores[c][0], -scores[c][1], -c.count("+"), float(c.split(":")[1])))
     return best, _fit_candidate(best, rows, y), scores
 
 
 def to_json(name: str, model) -> str:
+    if isinstance(model, OL):
+        return json.dumps({"kind": "ologit", "name": name, "model": asdict(model.model)}, indent=1)
     if isinstance(model, Ridge):
         return json.dumps({"kind": "ridge", "name": name, "model": asdict(model.model)}, indent=1)
     return json.dumps({"kind": "threshold", "name": name, "model": asdict(model)}, indent=1)
@@ -107,6 +143,9 @@ def to_json(name: str, model) -> str:
 
 def from_json(s: str):
     d = json.loads(s)
+    if d.get("kind") == "ologit":
+        from .ologit import OLogit
+        return OL(OLogit(**d["model"]))
     if d.get("kind") == "threshold":
         return Threshold(**d["model"])
     if d.get("kind") == "ridge":

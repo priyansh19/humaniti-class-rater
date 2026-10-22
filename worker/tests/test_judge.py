@@ -162,3 +162,16 @@ def test_payload_redacts_contact_details(analysis):
     a = analysis.model_copy(update={"excerpt": "mail me at a.b@example.com or +91 98765 43210"})
     p = llm.build_payload(a)
     assert "example.com" not in p and "98765" not in p
+
+
+def test_asr_sourced_analysis_uses_asr_model(analysis, monkeypatch):
+    from rater.judge import local
+    class Fake:
+        def predict(self, x):
+            assert "crit.energy" in x
+            return "Good", 2.0, 0.7
+    monkeypatch.setattr(local, "asr_model", lambda: Fake())
+    a = analysis.model_copy(update={"transcript_source": "asr"})
+    assert local.build_report(a).label == "Good"
+    monkeypatch.setattr(local, "asr_model", lambda: (_ for _ in ()).throw(AssertionError("asr model used for VTT")))
+    local.build_report(analysis)

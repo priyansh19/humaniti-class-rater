@@ -10,6 +10,16 @@ from .ordinal import OrdinalModel
 from .rubric import CRITERIA, criterion_scores
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "model.json")
+# v2.2 nested-selected ordinal-logit fit on Whisper-path features; used when the transcript came from ASR (MP4 upload).
+ASR_MODEL_PATH = os.path.join(os.path.dirname(__file__), "model_asr.json")
+
+
+def asr_model():
+    if not os.path.exists(ASR_MODEL_PATH):
+        return None
+    from .selection import from_json
+    with open(ASR_MODEL_PATH) as fh:
+        return from_json(fh.read())
 
 
 @lru_cache(maxsize=1)
@@ -85,8 +95,12 @@ def _ev(a: Analysis, key: str, n: int = 3):
 
 def build_report(a: Analysis, model: OrdinalModel | None = None) -> Report:
     crit = criterion_scores(a.features)
+    asr = asr_model() if model is None and a.transcript_source == "asr" else None
     model = model or shipped_model()
-    if model is None:
+    if asr is not None:
+        from .selection import flat
+        label, s, conf = asr.predict(flat(a.features))
+    elif model is None:
         known = [v for v in crit.values() if v is not None]
         s = (sum(known) / len(known) - 1) / 4 * 3
         from ..models import LABELS

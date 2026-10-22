@@ -1,0 +1,140 @@
+{
+ "feedback_agreement": [
+  {
+   "class": "average-B516",
+   "check": "practice_present",
+   "vtt": true,
+   "asr": false
+  },
+  {
+   "class": "excellent-B491",
+   "check": "teaching_aids_gap",
+   "vtt": false,
+   "asr": false
+  },
+  {
+   "class": "weak-B482",
+   "check": "opens_with_revision",
+   "vtt": true,
+   "asr": true
+  }
+ ],
+ "vtt_vs_asr": [
+  {
+   "class": "average-B435",
+   "subject_agree": true,
+   "top_topic_agree": true,
+   "jaccard": 0.4,
+   "minutes_rank_corr": 0.6571428571428573,
+   "depth_vtt": 1.833,
+   "depth_asr": 1.0
+  },
+  {
+   "class": "average-B516",
+   "subject_agree": true,
+   "top_topic_agree": true,
+   "jaccard": 0.0,
+   "minutes_rank_corr": 0.39999999999999997,
+   "depth_vtt": 1.8,
+   "depth_asr": 0.0
+  },
+  {
+   "class": "demo-english",
+   "subject_agree": true,
+   "top_topic_agree": true,
+   "jaccard": 0.38,
+   "minutes_rank_corr": 0.523809523809524,
+   "depth_vtt": 2.0,
+   "depth_asr": 0.667
+  },
+  {
+   "class": "demo-malayalam",
+   "subject_agree": false,
+   "top_topic_agree": true,
+   "jaccard": 1.0,
+   "minutes_rank_corr": null,
+   "depth_vtt": 1.0,
+   "depth_asr": 0.0
+  },
+  {
+   "class": "excellent-B472",
+   "subject_agree": true,
+   "top_topic_agree": false,
+   "jaccard": 1.0,
+   "minutes_rank_corr": 0.9285714285714287,
+   "depth_vtt": 2.0,
+   "depth_asr": 1.375
+  },
+  {
+   "class": "excellent-B491",
+   "subject_agree": true,
+   "top_topic_agree": true,
+   "jaccard": 0.6,
+   "minutes_rank_corr": 0.7714285714285715,
+   "depth_vtt": 2.2,
+   "depth_asr": 2.0
+  },
+  {
+   "class": "good-B435",
+   "subject_agree": true,
+   "top_topic_agree": true,
+   "jaccard": 1.0,
+   "minutes_rank_corr": 0.5714285714285715,
+   "depth_vtt": 1.625,
+   "depth_asr": 1.25
+  },
+  {
+   "class": "good-B552",
+   "subject_agree": true,
+   "top_topic_agree": false,
+   "jaccard": 1.0,
+   "minutes_rank_corr": 0.7999999999999999,
+   "depth_vtt": 2.5,
+   "depth_asr": 1.75
+  },
+  {
+   "class": "quality_issue-B392",
+   "subject_agree": true,
+   "top_topic_agree": true,
+   "jaccard": 0.83,
+   "minutes_rank_corr": 0.7619047619047621,
+   "depth_vtt": 1.889,
+   "depth_asr": 1.0
+  },
+  {
+   "class": "quality_issue-B441",
+   "subject_agree": true,
+   "top_topic_agree": false,
+   "jaccard": 0.62,
+   "minutes_rank_corr": 0.9285714285714287,
+   "depth_vtt": 1.375,
+   "depth_asr": 0.8
+  },
+  {
+   "class": "weak-B482",
+   "subject_agree": true,
+   "top_topic_agree": true,
+   "jaccard": 0.25,
+   "minutes_rank_corr": 0.3,
+   "depth_vtt": 2.2,
+   "depth_asr": 3.0
+  },
+  {
+   "class": "weak-B558",
+   "subject_agree": true,
+   "top_topic_agree": true,
+   "jaccard": 0.17,
+   "minutes_rank_corr": 0.7714285714285715,
+   "depth_vtt": 2.333,
+   "depth_asr": 0.75
+  }
+ ],
+ "summary": {
+  "feedback_checks_passed_vtt": "2/3",
+  "feedback_checks_passed_asr": "1/3",
+  "subject_agreement": "11/12",
+  "top_topic_agreement": "9/12",
+  "mean_topic_jaccard": 0.6,
+  "mean_minutes_rank_corr": 0.67
+ }
+}

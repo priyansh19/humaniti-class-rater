@@ -135,12 +135,19 @@ def main():
         F = [flat({m: r["analysis"].features[m] for m in mods if m in r["analysis"].features}) for r in rows]
         p3, chosen = [], []
         for i in range(len(F)):
-            nm, mdl, _ = select(F[:i] + F[i + 1:], y[:i] + y[i + 1:])
+            nm, mdl, _ = select(F[:i] + F[i + 1:], y[:i] + y[i + 1:], version="v2.1")
             chosen.append(nm)
             p3.append(mdl.predict(F[i])[0])
-        results[name + " - nested selection (v2.1)"] = metrics(y, p3)
-        results[name + " - nested selection (v2.1)"]["chosen"] = chosen
-        per_class[name + " - nested (v2.1)"] = {r["id"]: (r["label"], pp, 0.0, x) for r, pp, x in zip(rows, p3, X, strict=True)}
+        results[name + " - nested selection (v2.1, superseded)"] = metrics(y, p3)
+        results[name + " - nested selection (v2.1, superseded)"]["chosen"] = chosen
+        p4, chosen4 = [], []
+        for i in range(len(F)):
+            nm, mdl, _ = select(F[:i] + F[i + 1:], y[:i] + y[i + 1:], version="v2.2")
+            chosen4.append(nm)
+            p4.append(mdl.predict(F[i])[0])
+        results[name + " - nested ordinal-logit (v2.2)"] = metrics(y, p4)
+        results[name + " - nested ordinal-logit (v2.2)"]["chosen"] = chosen4
+        per_class[name + " - nested (v2.2)"] = {r["id"]: (r["label"], pp, 0.0, x) for r, pp, x in zip(rows, p4, X, strict=True)}
     if args.llm:
         from rater.judge import judge
         from rater.judge.providers import detect
@@ -153,6 +160,14 @@ def main():
     full = fit(crit_rows(rows, ("text", "audio", "visual")), [r["label"] for r in rows], FROZEN_KEYS)
     with open(MODEL_OUT, "w") as fh:
         fh.write(full.to_json())
+    # MP4 path model: v2.2 selection on all 10 Whisper-path rows (selection procedure identical to the nested eval)
+    arows = [r for r in load("asr") if r["label"]]
+    if len(arows) >= 10:
+        from rater.judge.selection import to_json
+        nm, mdl, _ = select([flat(r["analysis"].features) for r in arows], [r["label"] for r in arows], version="v2.2")
+        with open(os.path.join(os.path.dirname(MODEL_OUT), "model_asr.json"), "w") as fh:
+            fh.write(to_json(nm, mdl))
+        print("shipped ASR-path model:", nm)
     write_report(results, per_class, full)
     for k, v in results.items():
         print(f"{k:60s}", "n/a" if v is None else f"exact {v['exact']:.0%} within1 {v['within1']:.0%} mae {v['mae']:.2f}")
@@ -189,14 +204,14 @@ def write_report(results, per_class, full):
             L.append(f"| {cid} | {per_class[main_name][cid][0]} | " + " | ".join(cells) + " |")
         L += ["", "## Criterion scores (full variant, 1-5)", "", "| class | " + " | ".join(CRITERIA) + " |", "|---|" + "---|" * len(CRITERIA)]
         for cid, (_, _, _, x) in per_class[main_name].items():
-            L.append(f"| {cid} | " + " | ".join("-" if x[k] is None else f"{x[k]:.1f}" for k in CRITERIA) + " |")
+            L.append(f"| {cid} | " + " | ".join("-" if x.get(k) is None else f"{x[k]:.1f}" for k in CRITERIA) + " |")
         L += ["", "## Failure analysis", ""]
         for cid, (t, p, s, x) in per_class[main_name].items():
             if t == p:
                 continue
             key = "-".join(cid.split("-")[:2])
-            low = sorted((k for k in CRITERIA if x[k] is not None), key=lambda k: x[k])[:2]
-            high = sorted((k for k in CRITERIA if x[k] is not None), key=lambda k: -x[k])[:2]
+            low = sorted((k for k in CRITERIA if x.get(k) is not None), key=lambda k: x[k])[:2]
+            high = sorted((k for k in CRITERIA if x.get(k) is not None), key=lambda k: -x[k])[:2]
             L.append(f"- **{cid}**: true {t}, predicted {p} (score {s:.2f}). Organiser feedback: *{FEEDBACK.get(key, '?')}*. "
                      f"Highest criteria: {', '.join(high)}; lowest: {', '.join(low)}.")
     demos = [r for r in load("vtt") if not r["label"]]
@@ -209,6 +224,42 @@ def write_report(results, per_class, full):
             L.append(f"| {r['id']} | {lab} | {s:.2f} | {t['students_speaking']:.0f} students speaking, {t['student_turns_per_min']:.1f} student turns/min |")
     L += ["", "## Shipped model (fit on all 10 labelled classes)", "", "| criterion | standardised coefficient |", "|---|---|"]
     L += [f"| {k} | {c:+.2f} |" for k, c in zip(full.keys, full.coef, strict=True)]
+    L += ["", "## Model-selection history (honest account)", "",
+          "- **v2.0 (pre-registered)**: ridge-ordinal on all 7 criterion scores. Not above the majority baseline.",
+          ("- **v2.1**: nested LOO over a pool of 1-D thresholds on ~60 raw features plus ridge. After the transcript-anonymisation "
+          "change it collapsed to 0-10% exact. **Cause:** with 9 training rows (2 per class) the inner LOO rewards whichever "
+          "raw feature happens to separate those 9 rows (e.g. `homework_last10`, `students_named_by_tutor`); the held-out row then lands on the wrong "
+          "side of a 2-example cut-point. This was a selection-pool problem, not a code bug, so the pool was replaced."),
+          ("- **v2.2** (candidate set declared in `rater/judge/selection.py` before its first run): proportional-odds ordinal "
+          "logistic on 1-2 of the 7 rubric criteria, L2 in {1, 5}, 56 candidates, chosen by inner LOO. The inner folds "
+          "mostly pick `homework_closure` or `energy`."),
+          ("- **Stopping rule.** We deliberately did not try more variants against the same 10 outer folds. With n = 10, "
+          "each extra variant scored on the outer folds is tuning on the test set. **Conclusion: no supervised "
+          "local scorer reliably beats the 40% always-Poor baseline on this dataset.** The local scorer is the offline "
+          "fallback and its reasons and evidence are still useful, but the label should come from the LLM judge (see EVAL_MODELS.md)."),
+          ("- **Exception: the Whisper path (MP4 upload, which is what testers use).** v2.2 reaches 70% exact and 100% within ±1 "
+          "(v2.1: 80%). The inner folds pick `energy` in 8 of 10 folds. We checked for leakage: no label or path information reaches the "
+          "features, and the VTT and Whisper variants differ only in the transcript. Likely confound: under Whisper, every Poor class scores "
+          "energy of about 1.0, partly because low-quality audio yields fewer recognised exclamations and praise words. So this partly measures "
+          "audio/ASR quality, which genuinely correlates with the 'quality issue' classes. With n = 10, the 95% interval on 7/10 is about 35-93%. "
+          "This model ships (`model_asr.json`) only for ASR-sourced transcripts. Pasted VTTs keep the frozen v2.0 model.")]
+    cpath = os.path.join(HERE, "results/content.json")
+    if os.path.exists(cpath):
+        with open(cpath) as fh:
+            c = json.load(fh)
+        sm = c["summary"]
+        L += ["", "## Domain content coverage (exploratory; `python -m eval.content_eval`)", "",
+              "| check | result |", "|---|---|",
+              f"| agreement with the 3 content remarks in feedbacks.pdf, VTT | {sm['feedback_checks_passed_vtt']} |",
+              f"| same, Whisper transcript | {sm['feedback_checks_passed_asr']} |",
+              f"| VTT vs Whisper: subject agreement | {sm['subject_agreement']} |",
+              f"| VTT vs Whisper: top-topic agreement | {sm['top_topic_agreement']} |",
+              f"| VTT vs Whisper: mean topic-set Jaccard (topics >= 1 min) | {sm['mean_topic_jaccard']} |",
+              f"| VTT vs Whisper: mean rank correlation of minutes per topic | {sm['mean_minutes_rank_corr']} |", "",
+              "| class | feedback check | VTT | Whisper |", "|---|---|---|---|"]
+        L += [f"| {r['class']} | {r['check']} | {'pass' if r['vtt'] else 'fail'} | {'pass' if r['asr'] else 'fail'} |" for r in c["feedback_agreement"]]
+        L += ["", ("Only three feedback remarks touch on content, so the agreement check is very small. As an added 8th criterion, "
+              "content coverage did not improve label accuracy (see the 'full + content coverage' rows).")]
     L += ["", "## Caveats", "",
           "- n = 10, so one class is worth 10 percentage points. A 95% interval on 7/10 is roughly 35–93%. These numbers are indicative, not a benchmark.",
           "- Every variant that was run is listed above. Nothing was dropped.",

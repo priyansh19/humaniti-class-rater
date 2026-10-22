@@ -6,3 +6,4 @@ numpy>=1.26
 opencv-python-headless>=4.9,<5
 faster-whisper>=1.1
 wordfreq>=3.1
+scipy>=1.11
